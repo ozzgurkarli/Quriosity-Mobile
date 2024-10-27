@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:quriosity/S-CRTACCTO/CRTACCTO.dart';
-import 'package:quriosity/S-RSTPASSWD/RSTPASSWD.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UScaffold.dart';
 import 'package:quriosity/components/UText.dart';
@@ -11,17 +9,15 @@ import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/USize.dart';
 
-class LOGINACC extends StatefulWidget {
-  const LOGINACC({super.key});
+class RSTPASSWD extends StatefulWidget {
+  const RSTPASSWD({super.key});
 
   @override
-  State<LOGINACC> createState() => _LOGINACCState();
+  State<RSTPASSWD> createState() => _RSTPASSWDState();
 }
 
-class _LOGINACCState extends State<LOGINACC> {
-  bool passwordObsecure = true;
+class _RSTPASSWDState extends State<RSTPASSWD> {
   TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +35,9 @@ class _LOGINACCState extends State<LOGINACC> {
         ),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               SizedBox(
-                height: USize.Height / 4,
+                height: USize.Height / 10,
               ),
               UText(
                 "QURIOSITY",
@@ -52,63 +47,50 @@ class _LOGINACCState extends State<LOGINACC> {
                 color: UColor.WhiteHeavyColor,
               ),
               SizedBox(
-                height: USize.Height / 12,
+                height: USize.Height / 6,
               ),
+              SizedBox(
+                width: USize.Width*0.7,
+                child: UText(
+                    "Parolanı unuttun diye panik yapma! Eğer girdiğin kullanıcı adı ve e-posta birbiriyle iyi anlaşıyorsa, sana yeni bir parola oluşturma bağlantısı göndereceğiz.", fontWeight: FontWeight.w500,),
+              ),
+              SizedBox(height: USize.Height/33,),
               UTextField(
                 controller: usernameController,
                 hintText: "Kullanıcı Adı",
                 fillColor: UColor.WhiteHeavyColor,
-                prefixIcon: const Icon(Icons.person_3),
-                prefixColor: UColor.PrimaryColor,
-              ),
-              SizedBox(
-                height: USize.Height / 67,
-              ),
-              UTextField(
-                controller: passwordController,
-                obsecureText: passwordObsecure,
-                hintText: "Parola",
-                fillColor: UColor.WhiteHeavyColor,
-                suffixIcon: GestureDetector(onTap: (){
-                  setState(() {
-                    passwordObsecure = !passwordObsecure;
-                  });
-                }, child: const Icon(Icons.remove_red_eye_sharp),),
-                prefixIcon: const Icon(Icons.password_outlined),
+                prefixIcon: const Icon(Icons.contact_emergency),
                 prefixColor: UColor.PrimaryColor,
               ),
               SizedBox(
                 height: USize.Height / 33,
               ),
+              UTextField(
+                controller: usernameController,
+                hintText: "E-mail",
+                fillColor: UColor.WhiteHeavyColor,
+                prefixIcon: const Icon(Icons.mail),
+                prefixColor: UColor.PrimaryColor,
+              ),
+              SizedBox(
+                height: USize.Height / 12,
+              ),
               UButton(
-                  onPressed: () {HelperMethods.SetLoadingScreen(context);},
+                  onPressed: () {
+                    HelperMethods.SetLoadingScreen(context);
+                  },
                   child: UText(
-                    "Giriş Yap",
+                    "Hazırım!",
                     color: UColor.PrimaryColor,
                     fontWeight: FontWeight.w600,
                   )),
-              SizedBox(
-                height: USize.Height / 50,
-              ),
-              SizedBox(
-                height: USize.Height / 5,
-              ),
               UTextButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> const CRTACCTO()));
+                  Navigator.pop(context);
                 },
                   child: UText(
-                "Hesap oluştur, sormaya başla!",
-                fontWeight: FontWeight.w500,
-              )),
-              UTextButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> const RSTPASSWD()));
-                },
-                  child: UText(
-                "Parola? Ne parolası?",
-                fontWeight: FontWeight.w500,
-              )),
+                      "Parolanı yeni mi hatırladın?\nGeri dönmek için geç değil.",
+                fontWeight: FontWeight.w500,))
             ],
           ),
         ),

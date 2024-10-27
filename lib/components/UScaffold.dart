@@ -29,7 +29,7 @@ class _UScaffoldState extends State<UScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: UColor.WhiteColor,
+      backgroundColor: UColor.PrimaryColor,
       
       body: GestureDetector(
           onTap: () {

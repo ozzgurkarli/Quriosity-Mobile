@@ -42,8 +42,7 @@ class _SPLSHSCRState extends State<SPLSHSCR> {
               SizedBox(height: USize.Height/13,),
           UText("QURIOSITY", fontSize: 30, fontWeight: FontWeight.w800, googleFonts: true,),
               SizedBox(height: USize.Height/91,),
-          UText("Your Questions,", fontWeight: FontWeight.w500,),
-          UText("Your Community.", fontWeight: FontWeight.w500,),
+          UText("Your Questions,\nYour Community.", fontWeight: FontWeight.w500,),
         ],
       )),
     );
