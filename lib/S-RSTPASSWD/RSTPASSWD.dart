@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
+import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
+import 'package:quriosity/api/IService.dart';
+import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UScaffold.dart';
 import 'package:quriosity/components/UText.dart';
@@ -8,6 +12,7 @@ import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
+import 'package:quriosity/helpers/URequestType.dart';
 import 'package:quriosity/helpers/USize.dart';
 
 class RSTPASSWD extends StatefulWidget {
@@ -18,6 +23,7 @@ class RSTPASSWD extends StatefulWidget {
 }
 
 class _RSTPASSWDState extends State<RSTPASSWD> {
+  final shakeKey = GlobalKey<ShakeWidgetState>();
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
 
@@ -39,7 +45,7 @@ class _RSTPASSWDState extends State<RSTPASSWD> {
           child: Column(
             children: [
               SizedBox(
-                height: USize.Height / 10,
+                height: USize.Height / 13,
               ),
               UText(
                 "QURIOSITY",
@@ -49,7 +55,7 @@ class _RSTPASSWDState extends State<RSTPASSWD> {
                 color: UColor.WhiteHeavyColor,
               ),
               SizedBox(
-                height: USize.Height / 6,
+                height: USize.Height / 5,
               ),
               SizedBox(
                 width: USize.Width * 0.7,
@@ -64,6 +70,7 @@ class _RSTPASSWDState extends State<RSTPASSWD> {
               ),
               UTextField(
                 controller: usernameController,
+                maxLength: 15,
                 hintText: Localizer.Get(Localizer.username),
                 onChanged: (p0) {
                   String filteredValue =
@@ -103,15 +110,49 @@ class _RSTPASSWDState extends State<RSTPASSWD> {
               SizedBox(
                 height: USize.Height / 12,
               ),
-              UButton(
-                  onPressed: () {
-                    HelperMethods.SetLoadingScreen(context);
-                  },
-                  child: UText(
-                    Localizer.Get(Localizer.im_ready),
-                    color: UColor.PrimaryColor,
-                    fontWeight: FontWeight.w600,
-                  )),
+              ShakeMe(
+                key: shakeKey,
+                shakeCount: 3,
+                shakeOffset: 5,
+                shakeDuration: const Duration(milliseconds: 500),
+                child: UButton(
+                    onPressed: () {
+                      bool error = false;
+                      if (usernameController.text.length < 4) {
+                        HelperMethods.SetSnackBar(
+                            context,
+                            Localizer.Get(Localizer
+                                .username_cannot_be_less_than_4_characters),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (emailController.text.split('@').length < 2 ||
+                          emailController.text.split('.c').length < 2) {
+                        HelperMethods.SetSnackBar(
+                            context, Localizer.Get(Localizer.invalid_email),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (error) {
+                        shakeKey.currentState?.shake();
+                        return;
+                      }
+                      HelperMethods.SetLoadingScreen(context);
+                      UProxy.Request(URequestType.GET, IService.RESET_PASSWORD, param: "${usernameController.text}/${Uri.encodeComponent(emailController.text)}");
+                      HelperMethods.SetSnackBar(context, Localizer.Get(Localizer.check_email_for_link), duration: const Duration(seconds: 10));
+                      Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LOGINACC()),
+                            (route) => false);
+                    },
+                    child: UText(
+                      Localizer.Get(Localizer.im_ready),
+                      color: UColor.PrimaryColor,
+                      fontWeight: FontWeight.w600,
+                    )),
+              ),
+              SizedBox(height: USize.Height/12,),
               UTextButton(
                   onPressed: () {
                     Navigator.pop(context);

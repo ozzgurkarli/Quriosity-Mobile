@@ -16,6 +16,7 @@ import 'package:quriosity/components/UTextField.dart';
 import 'package:quriosity/dto/DTOUser.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Localizer.dart';
+import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/URequestType.dart';
@@ -53,9 +54,22 @@ class _LOGINACCState extends State<LOGINACC> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               SizedBox(
-                height: USize.Height / 10,
+                height: USize.Height / 13,
               ),
-              Padding(
+              
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                UText(
+                  "QURIOSITY",
+                  fontSize: 45,
+                  googleFonts: true,
+                  fontWeight: FontWeight.w600,
+                  color: UColor.WhiteHeavyColor,
+                ),
+                Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
                 padding: EdgeInsets.only(left: USize.Width / 1.5),
                 child: UTextButton(
                   onPressed: () {
@@ -69,24 +83,17 @@ class _LOGINACCState extends State<LOGINACC> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
+              ),)
+              ],
+            ),
               SizedBox(
-                height: USize.Height / 9,
-              ),
-              UText(
-                "QURIOSITY",
-                fontSize: 45,
-                googleFonts: true,
-                fontWeight: FontWeight.w600,
-                color: UColor.WhiteHeavyColor,
-              ),
-              SizedBox(
-                height: USize.Height / 12,
+                height: USize.Height / 4,
               ),
               UTextField(
                 controller: usernameController,
                 hintText: Localizer.Get(Localizer.username),
                 fillColor: UColor.WhiteHeavyColor,
+                maxLength: 15,
                 prefixIcon: const Icon(Icons.person_3),
                 onChanged: (p0) {
                   String filteredValue =
@@ -154,6 +161,7 @@ class _LOGINACCState extends State<LOGINACC> {
                             Localizer.Get(Localizer
                                 .password_cannot_be_less_than_8_characters),
                             errorBar: true);
+                        error = true;
                       }
 
                       if (error) {
@@ -171,6 +179,7 @@ class _LOGINACCState extends State<LOGINACC> {
                             data: dtoUser.toJson()));
 
                         if (dtoUser.uid != null) {
+                          Pool.User = dtoUser;
                           Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
@@ -178,7 +187,7 @@ class _LOGINACCState extends State<LOGINACC> {
                               (route) => false);
                         }
                       } catch (e) {
-                        HelperMethods.ApiException(context, e.toString());
+                        HelperMethods.ApiException(context, e, key: shakeKey);
                       }
                     },
                     child: UText(

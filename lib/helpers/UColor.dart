@@ -14,6 +14,7 @@ class UColor
   static const Color BarrierColor = Color(0xBB000000);
   static const Color RedLightColor = Color(0xFFFf4744);
   static const Color GreenColor = Color(0xFF4CAF50);
+  static const Color GreenHeavyColor = Color(0xFF308531);
   static const Color RedColor = Color(0xFFFE1D1D);
   static const Color RedHeavyColor = Color(0xFFB11B1B);
 }

@@ -1,7 +1,4 @@
 // ignore_for_file: non_constant_identifier_names
-
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:quriosity/api/ENV.dart';
 
@@ -19,7 +16,7 @@ class UProxy {
       if (Type == 1) {
         response = await proxy.Post(dio, route, data!);
       } else if (Type == 2) {
-        response = await proxy.Get(dio, route);
+        response = await proxy.Get(dio, route, param: param);
       }
     } catch (e) {
       if (e is DioException) {

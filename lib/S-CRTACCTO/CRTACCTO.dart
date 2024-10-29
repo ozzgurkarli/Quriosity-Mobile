@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
+import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UButton.dart';
@@ -24,6 +26,7 @@ class CRTACCTO extends StatefulWidget {
 }
 
 class _CRTACCTOState extends State<CRTACCTO> {
+  final shakeKey = GlobalKey<ShakeWidgetState>();
   TextEditingController nameSurnameController = TextEditingController();
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -49,7 +52,7 @@ class _CRTACCTOState extends State<CRTACCTO> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               SizedBox(
-                height: USize.Height / 10,
+                height: USize.Height / 12,
               ),
               UText(
                 "QURIOSITY",
@@ -59,7 +62,7 @@ class _CRTACCTOState extends State<CRTACCTO> {
                 color: UColor.WhiteHeavyColor,
               ),
               SizedBox(
-                height: USize.Height / 6,
+                height: USize.Height / 8,
               ),
               UTextField(
                 controller: nameSurnameController,
@@ -70,7 +73,8 @@ class _CRTACCTOState extends State<CRTACCTO> {
 
                   if (filteredValue != p0) {
                     nameSurnameController.text = filteredValue;
-                    nameSurnameController.selection = TextSelection.fromPosition(
+                    nameSurnameController.selection =
+                        TextSelection.fromPosition(
                       TextPosition(offset: filteredValue.length),
                     );
                   }
@@ -84,6 +88,7 @@ class _CRTACCTOState extends State<CRTACCTO> {
               ),
               UTextField(
                 controller: usernameController,
+                maxLength: 15,
                 hintText: Localizer.Get(Localizer.username),
                 onChanged: (p0) {
                   String filteredValue =
@@ -163,7 +168,8 @@ class _CRTACCTOState extends State<CRTACCTO> {
                   String filteredValue = p0.replaceAll(RegExp(r'\s'), '');
                   if (filteredValue != p0) {
                     passwordRepeatController.text = filteredValue;
-                    passwordRepeatController.selection = TextSelection.fromPosition(
+                    passwordRepeatController.selection =
+                        TextSelection.fromPosition(
                       TextPosition(offset: filteredValue.length),
                     );
                   }
@@ -186,26 +192,92 @@ class _CRTACCTOState extends State<CRTACCTO> {
               SizedBox(
                 height: USize.Height / 12,
               ),
-              UButton(
-                  onPressed: () async {
-                    HelperMethods.SetLoadingScreen(context);
-                    DTOUser user = DTOUser(
-                        NameSurname: "Özgür Karli",
-                        Email: "ozgurkrl533@hotmail.com",
-                        Password: "Ozgur123",
-                        Username: "ozzgur123321");
-                    try {
-                      await UProxy.Request(URequestType.POST, IService.ADD_USER, data: user.toJson());
-                      Navigator.pop(context);
-                    } catch (e) {
-                      HelperMethods.ApiException(context, e.toString());
-                    }
-                  },
-                  child: UText(
-                    Localizer.Get(Localizer.im_ready),
-                    color: UColor.PrimaryColor,
-                    fontWeight: FontWeight.w600,
-                  )),
+              ShakeMe(
+                key: shakeKey,
+                shakeCount: 3,
+                shakeOffset: 5,
+                shakeDuration: const Duration(milliseconds: 500),
+                child: UButton(
+                    onPressed: () async {
+                      bool error = false;
+                      if (nameSurnameController.text.split(' ').length < 2) {
+                        HelperMethods.SetSnackBar(context,
+                            Localizer.Get(Localizer.invalid_namesurname),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (usernameController.text.length < 4) {
+                        HelperMethods.SetSnackBar(
+                            context,
+                            Localizer.Get(Localizer
+                                .username_cannot_be_less_than_4_characters),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (emailController.text.split('@').length < 2 ||
+                          emailController.text.split('.c').length < 2) {
+                        HelperMethods.SetSnackBar(
+                            context, Localizer.Get(Localizer.invalid_email),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (passwordController.text.length < 8) {
+                        HelperMethods.SetSnackBar(
+                            context,
+                            Localizer.Get(Localizer
+                                .password_cannot_be_less_than_8_characters),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (passwordRepeatController.text !=
+                          passwordController.text) {
+                        HelperMethods.SetSnackBar(
+                            context,
+                            Localizer.Get(Localizer
+                                .password_and_confirmation_does_not_match),
+                            errorBar: true);
+                        error = true;
+                      }
+                      if (error) {
+                        shakeKey.currentState?.shake();
+                        return;
+                      }
+                      HelperMethods.SetLoadingScreen(context);
+                      DTOUser user = DTOUser(
+                          NameSurname: nameSurnameController.text
+                              .split(' ')
+                              .map((word) => word.isNotEmpty
+                                  ? word[0].toUpperCase() + word.substring(1)
+                                  : '')
+                              .join(' '),
+                          Email: emailController.text,
+                          Password: passwordController.text,
+                          Username: usernameController.text);
+                      try {
+                        await UProxy.Request(
+                            URequestType.POST, IService.ADD_USER,
+                            data: user.toJson());
+                        HelperMethods.SetSnackBar(
+                            context, Localizer.Get(Localizer.account_created),
+                            successBar: true, duration: const Duration(seconds: 10));
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LOGINACC()),
+                            (route) => false);
+                      } catch (e) {
+                        HelperMethods.ApiException(context, e, key: shakeKey);
+                      }
+                    },
+                    child: UText(
+                      Localizer.Get(Localizer.im_ready),
+                      color: UColor.PrimaryColor,
+                      fontWeight: FontWeight.w600,
+                    )),
+              ),
+              SizedBox(
+                height: USize.Height / 12,
+              ),
               UTextButton(
                   onPressed: () {
                     Navigator.pop(context);

@@ -1,6 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:gap/gap.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UText.dart';
@@ -10,6 +12,7 @@ import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/USize.dart';
 
 class HelperMethods {
+
   static Widget ShowAsset(String path, {double? height, double? width}) {
     return Image.asset(
       path,
@@ -17,6 +20,22 @@ class HelperMethods {
       width: width ?? USize.Width,
       fit: BoxFit.fill,
     );
+  }
+
+  static String CalculateLastActivityTime(DateTime date){
+    Duration dif = DateTime.now().difference(date);
+
+    if(dif.inDays > 0){
+      return dif.inDays > 30 ? dif.inDays > 365 ? "${dif.inDays~/365}y" : "${dif.inDays~/30}${Localizer.Get(Localizer.shortened_month)}" : "${dif.inDays}${Localizer.Get(Localizer.shortened_day)}";
+    }
+    else if(dif.inHours > 0){
+      return "${dif.inHours}${Localizer.Get(Localizer.shortened_hour)}";
+    }
+    else if(dif.inMinutes > 0){
+      return "${dif.inMinutes}${Localizer.Get(Localizer.shortened_minute)}";
+    }
+    
+    return "${dif.inSeconds}${Localizer.Get(Localizer.shortened_second)}";
   }
 
   static SetLoadingScreen(BuildContext context) {
@@ -59,14 +78,23 @@ class HelperMethods {
   //   return sp.getString("FullName") ?? "";
   // }
 
-  static SetSnackBar(BuildContext context, String text, {bool errorBar = false}) {
+  static SetSnackBar(BuildContext context, String text,
+      {bool errorBar = false,
+      bool successBar = false,
+      Duration duration = const Duration(seconds: 4)}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       margin: EdgeInsets.all(USize.Height / 20),
       content: Align(alignment: Alignment.center, child: UText(text)),
-      backgroundColor: errorBar ? UColor.RedHeavyColor : UColor.ThirdColor,
+      duration: duration,
+      backgroundColor: errorBar
+          ? UColor.RedHeavyColor
+          : successBar
+              ? UColor.GreenHeavyColor
+              : UColor.ThirdColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       showCloseIcon: true,
-      closeIconColor: errorBar ? UColor.WhiteColor : UColor.SecondColor,
+      closeIconColor:
+          errorBar || successBar ? UColor.WhiteColor : UColor.SecondColor,
       behavior: SnackBarBehavior.floating,
     ));
   }
@@ -121,7 +149,16 @@ class HelperMethods {
   //   );
   // }
 
-  static ApiException(BuildContext context, String exception, {int? popUntil}) {
+  static ApiException(BuildContext context, Object exception,
+      {int? popUntil, GlobalKey<ShakeWidgetState>? key}) {
+    if (exception is! DioException) {
+      HelperMethods.SetSnackBar(context, exception.toString().substring(11), errorBar: true);
+      Navigator.pop(context);
+      if (key != null) {
+        key.currentState?.shake();
+      }
+      return;
+    }
     showModalBottomSheet(
       context: context,
       barrierColor: UColor.BarrierColor,
@@ -142,7 +179,13 @@ class HelperMethods {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Gap(USize.Height / 100),
+                Gap(USize.Height / 67),
+                UText(
+                  Localizer.Get(Localizer.Error),
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
                 HelperMethods.ShowAsset(
                   UAsset.ERROR_404,
                   height: USize.Height / 8,
@@ -151,11 +194,13 @@ class HelperMethods {
                 Expanded(
                   child: SingleChildScrollView(
                     child: UText(
-                        exception.substring(11), color: Colors.black,),
+                      exception.toString().substring(11),
+                      color: Colors.black,
+                    ),
                   ),
                 ),
                 UButton(
-                  primaryButton: true,
+                    primaryButton: true,
                     onPressed: () {
                       int count = 0;
                       popUntil = popUntil ?? 2;
@@ -163,7 +208,7 @@ class HelperMethods {
                           .popUntil((_) => count++ >= popUntil!);
                     },
                     child: UText(
-                      "Tamam",
+                      Localizer.Get(Localizer.ok),
                       color: UColor.WhiteColor,
                     )),
                 Gap(USize.Height / 30),
