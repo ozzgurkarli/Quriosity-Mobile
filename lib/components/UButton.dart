@@ -6,12 +6,14 @@ import 'package:quriosity/helpers/UColor.dart';
 class UButton extends StatefulWidget {
   final VoidCallback? onPressed;
   Widget? child;
+  bool? primaryButton;
   bool? redButton;
 
   UButton(
       {super.key,
       required this.onPressed,
       this.redButton,
+      this.primaryButton,
       required this.child,});
   @override
   State<UButton> createState() => _UButtonState();
@@ -53,8 +55,8 @@ class _UButtonState extends State<UButton> {
                 splashFactory: NoSplash.splashFactory,
                 elevation: const WidgetStatePropertyAll(8),
                 shape: const WidgetStatePropertyAll(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(11.25)))),
-                backgroundColor: widget.redButton == null ? const WidgetStatePropertyAll(UColor.WhiteHeavyColor) : const WidgetStatePropertyAll(UColor.RedColor),
+                    borderRadius: BorderRadius.all(Radius.circular(12)))),
+                backgroundColor: widget.redButton == null ? widget.primaryButton == null ? const WidgetStatePropertyAll(UColor.WhiteHeavyColor) : const WidgetStatePropertyAll(UColor.SecondHeavyColor)  : const WidgetStatePropertyAll(UColor.RedColor),
                 shadowColor: const WidgetStatePropertyAll(Colors.black)),
             child: widget.child),
       ),

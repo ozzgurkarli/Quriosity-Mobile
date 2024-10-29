@@ -85,13 +85,13 @@ class UTextField extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w500),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(15),
                 borderSide:
                     const BorderSide(color: UColor.RedHeavyColor, width: 3)),
             prefixIconColor:
                 errorText != null ? UColor.RedHeavyColor : prefixColor,
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none)),
       ),
     );
