@@ -17,6 +17,8 @@ class UProxy {
         response = await proxy.Post(dio, route, data!);
       } else if (Type == 2) {
         response = await proxy.Get(dio, route, param: param);
+      }else if (Type == 3) {
+        response = await proxy.Put(dio, route, data!);
       }
     } catch (e) {
       if (e is DioException) {
@@ -34,6 +36,11 @@ class UProxy {
   Future<Response> Post(Dio dio, String route, Map<String, dynamic> data) async {
     final url = "${ENV.ConnectionString}$route";
     return await dio.post(url, data: data);
+  }
+
+  Future<Response> Put(Dio dio, String route, Map<String, dynamic> data) async {
+    final url = "${ENV.ConnectionString}$route";
+    return await dio.put(url, data: data);
   }
 
   Future<Response> Get(Dio dio, String route, {String? param}) async {

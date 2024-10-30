@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:quriosity/api/IService.dart';
@@ -8,6 +10,7 @@ import 'package:quriosity/components/UScaffold.dart';
 import 'package:quriosity/components/UText.dart';
 import 'package:quriosity/components/UTextField.dart';
 import 'package:quriosity/dto/DTOCommunity.dart';
+import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UColor.dart';
@@ -77,6 +80,7 @@ class _CRTJNACTState extends State<CRTJNACT> {
             ),
             UTextField(
               controller: invitationLinkController,
+              maxLength: 8,
               hintText: Localizer.Get(Localizer.invitation_link),
               fillColor: UColor.WhiteHeavyColor,
               prefixIcon: const Icon(Icons.share),
@@ -86,15 +90,17 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
                   child: UButton(
-                    primaryButton: true,
+                      primaryButton: true,
                       onPressed: () {
                         shakeKeyJoin.currentState?.shake();
                       },
-                      child: UText(Localizer.Get(Localizer.join), fontWeight: FontWeight.w500,))),
+                      child: UText(
+                        Localizer.Get(Localizer.join),
+                        fontWeight: FontWeight.w500,
+                      ))),
               onChanged: (p0) {
-                String filteredValue =
-                    p0.replaceAll(RegExp(r'[^A-Z0-9]'), '');
-            
+                String filteredValue = p0.replaceAll(RegExp(r'[^A-Z0-9]'), '');
+
                 if (filteredValue != p0) {
                   invitationLinkController.text = filteredValue;
                   invitationLinkController.selection =
@@ -105,34 +111,37 @@ class _CRTJNACTState extends State<CRTJNACT> {
               },
               prefixColor: UColor.PrimaryColor,
             ),
-            SizedBox(height: USize.Height/20,),
             SizedBox(
-              width: USize.Width*0.7,
+              height: USize.Height / 20,
+            ),
+            SizedBox(
+              width: USize.Width * 0.7,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     height: 1,
-                    width: USize.Width*0.25,
-                    decoration: const BoxDecoration(
-                      color: UColor.WhiteHeavyColor
-                    ),
+                    width: USize.Width * 0.25,
+                    decoration:
+                        const BoxDecoration(color: UColor.WhiteHeavyColor),
                   ),
                   Expanded(child: UText(Localizer.Get(Localizer.or))),
                   Container(
                     height: 1,
-                    width: USize.Width*0.25,
-                    decoration: const BoxDecoration(
-                      color: UColor.WhiteHeavyColor
-                    ),
+                    width: USize.Width * 0.25,
+                    decoration:
+                        const BoxDecoration(color: UColor.WhiteHeavyColor),
                   )
                 ],
               ),
             ),
-            SizedBox(height: USize.Height/20,),
+            SizedBox(
+              height: USize.Height / 20,
+            ),
             UTextField(
               controller: communityNameController,
+              maxLength: 30,
               hintText: Localizer.Get(Localizer.community_name),
               fillColor: UColor.WhiteHeavyColor,
               prefixIcon: const Icon(Icons.diversity_3),
@@ -142,17 +151,43 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
                   child: UButton(
-                    primaryButton: true,
-                      onPressed: ()async {
-                        shakeKeyCreate.currentState?.shake();
-                        DTOCommunity dtoCommunity = DTOCommunity(CommunityName: communityNameController.text.trim(), Participants: [{'uid': Pool.User.uid, 'flag': 0}]);
-                        await UProxy.Request(URequestType.POST, IService.CREATE_COMMUNITY, data: dtoCommunity.toJson());
+                      primaryButton: true,
+                      onPressed: () async {
+                        if (communityNameController.text.length < 4) {
+                          shakeKeyCreate.currentState?.shake();
+                          HelperMethods.SetSnackBar(
+                              context,
+                              Localizer.Get(Localizer
+                                  .community_name_cannot_be_less_than_4_characters),
+                              errorBar: true);
+                          return;
+                        }
+                        HelperMethods.SetLoadingScreen(context);
+                        DTOCommunity dtoCommunity = DTOCommunity(
+                            CommunityName: communityNameController.text.trim(),
+                            Participants: [
+                              {'uid': Pool.User.uid, 'flag': 0}
+                            ]);
+                        try {
+                          await UProxy.Request(
+                              URequestType.POST, IService.CREATE_COMMUNITY,
+                              data: dtoCommunity.toJson());
+                          HelperMethods.SetSnackBar(context,
+                              Localizer.Get(Localizer.community_created));
+                          int count = 0;
+                          Navigator.of(context).popUntil((_) => count++ >= 2);
+                        } catch (e) {
+                          HelperMethods.ApiException(context, e);
+                        }
                       },
-                      child: UText(Localizer.Get(Localizer.create), fontWeight: FontWeight.w500,))),
+                      child: UText(
+                        Localizer.Get(Localizer.create),
+                        fontWeight: FontWeight.w500,
+                      ))),
               onChanged: (p0) {
                 String filteredValue =
                     p0.replaceAll(RegExp(r'[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]'), '');
-            
+
                 if (filteredValue != p0) {
                   communityNameController.text = filteredValue;
                   communityNameController.selection =

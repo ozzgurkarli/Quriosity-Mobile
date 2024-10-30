@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quriosity/S-CMNTYHME/CMNTYHME.dart';
 import 'package:quriosity/S-CRTJNACT/CRTJNACT.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
@@ -110,7 +111,9 @@ class _HOMESCRNState extends State<HOMESCRN> {
                       context,
                       MaterialPageRoute(
                           builder: (context) => const CRTJNACT()));
-                  newRequest();
+                  setState(() {
+                    newRequest();
+                  });
                 },
                 child: Stack(
                   alignment: Alignment.center,
@@ -165,7 +168,8 @@ class _HOMESCRNState extends State<HOMESCRN> {
                     } else if (segmentSelected.first == "1") {
                       for (var comm in communityList) {
                         for (var item in comm.Participants!) {
-                          if (item["uid"] == Pool.User.uid && item["flag"] == 1) {
+                          if (item["uid"] == Pool.User.uid &&
+                              item["flag"] == 1) {
                             commList.add(comm);
                           }
                         }
@@ -185,7 +189,11 @@ class _HOMESCRNState extends State<HOMESCRN> {
                           }
                           return Column(
                             children: [
-                              Container(height: index == 0 ? 0 : 0.5, width: USize.Width*0.7, color: UColor.ThirdColor,),
+                              Container(
+                                height: index == 0 ? 0 : 0.5,
+                                width: USize.Width * 0.7,
+                                color: UColor.ThirdColor,
+                              ),
                               ListTile(
                                 leading: Container(
                                   width: USize.Height / 77,
@@ -217,10 +225,17 @@ class _HOMESCRNState extends State<HOMESCRN> {
                                           ),
                                           Center(
                                             child: Padding(
-                                              padding:
-                                                  const EdgeInsets.only(bottom: 10),
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 10),
                                               child: HelperMethods.ShowAsset(
-                                                  UAsset.FIRE,
+                                                  DateTime.now()
+                                                              .difference(commList[
+                                                                      index]
+                                                                  .LastActivity!)
+                                                              .inHours >
+                                                          24
+                                                      ? UAsset.COLD_FIRE
+                                                      : UAsset.FIRE,
                                                   height: USize.Height / 33,
                                                   width: USize.Height / 50),
                                             ),
@@ -235,7 +250,34 @@ class _HOMESCRNState extends State<HOMESCRN> {
                                             borderRadius:
                                                 BorderRadius.circular(30)),
                                       ),
-                                onTap: () {},
+                                onTap: () async {
+                                  for (var item
+                                      in commList[index].Participants!) {
+                                    if (item["uid"] == Pool.User.uid) {
+                                      UProxy.Request(URequestType.PUT,
+                                          IService.COMMUNITY_OPENED, data: {
+                                        "id": commList[index].id!,
+                                        "uid": Pool.User.uid
+                                      });
+                                    }
+                                  }
+                                  if (newActivity) {
+                                    UProxy.Request(URequestType.PUT,
+                                        IService.COMMUNITY_OPENED, data: {
+                                      "id": commList[index].id!,
+                                      "uid": Pool.User.uid
+                                    });
+                                  }
+                                  await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => CMNTYHME(
+                                              communityId:
+                                                  commList[index].id!)));
+                                  setState(() {
+                                    newRequest();
+                                  });
+                                },
                               ),
                             ],
                           );

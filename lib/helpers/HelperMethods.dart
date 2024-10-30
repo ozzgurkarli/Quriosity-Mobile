@@ -81,7 +81,7 @@ class HelperMethods {
   static SetSnackBar(BuildContext context, String text,
       {bool errorBar = false,
       bool successBar = false,
-      Duration duration = const Duration(seconds: 4)}) {
+      Duration duration = const Duration(seconds: 5)}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       margin: EdgeInsets.all(USize.Height / 20),
       content: Align(alignment: Alignment.center, child: UText(text)),

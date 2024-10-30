@@ -3,4 +3,5 @@
 class URequestType {
   static int POST = 1;
   static int GET = 2;
+  static int PUT = 3;
 }

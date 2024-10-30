@@ -9,5 +9,6 @@ class UAsset
   static String LOGO_GIF = "lib/assets/logo.gif";
   static String LOADING = "lib/assets/loading.gif";
   static String FIRE = "lib/assets/fire.gif";
+  static String COLD_FIRE = "lib/assets/cold-fire.gif";
   static String LOGOUT = "lib/assets/logout.gif";
 }

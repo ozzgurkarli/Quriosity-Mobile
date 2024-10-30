@@ -20,6 +20,7 @@ class Localizer
   static const List<String> your_questions_your_community = ["Senin Soruların,\nSenin Topluluğun.", "Your Questions,\nYour Community."];
   static const List<String> username_cannot_be_less_than_4_characters = ["Kullanıcı adı 4 karakterden az olamaz.", "The username cannot be less than 4 characters."];
   static const List<String> password_cannot_be_less_than_8_characters = ["Parola 8 karakterden az olamaz.", "The password cannot be less than 8 characters."];
+  static const List<String> community_name_cannot_be_less_than_4_characters = ["Topluluk adı 4 karakterden az olamaz.", "The community name cannot be less than 4 characters."];
   static const List<String> invalid_email = ["E-mail adresi geçersiz.", "Invalid e-mail address."];
   static const List<String> invalid_namesurname = ["Ad-soyad geçersiz.", "Invalid name-surname."];
   static const List<String> password_and_confirmation_does_not_match = ["Parola ile tekrarı eşleşmiyor.", "Password and confirmation do not match."];
@@ -42,6 +43,7 @@ class Localizer
   static const List<String> invitation_link = ["Davet Bağlantısı", "Invitation Link"];
   static const List<String> community_name = ["Topluluk Adı", "Community Name"];
   static const List<String> create_join_community = ["Topluluk Oluştur/Katıl", "Create/Join Community"];
+  static const List<String> community_created = ["Topluluk oluşturuldu! Hadi şimdi arkadaşlarını davet et, soru bombardımanı başlasın!", "Community created! Now invite your friends and let the question bombardment begin!"];
   
   static String Get(List<String> list){
     return list[index];
