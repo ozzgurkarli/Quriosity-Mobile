@@ -214,7 +214,12 @@ class _HOMESCRNState extends State<HOMESCRN> {
                                   "${Localizer.Get(Localizer.last_activity)}${HelperMethods.CalculateLastActivityTime(commList[index].LastActivity!)}${Localizer.Get(Localizer.ago)}",
                                   color: UColor.ThirdColor,
                                 ),
-                                trailing: commList[index].Streak! > 2
+                                trailing: commList[index].Streak! > 2 && DateTime.now()
+                                                              .difference(commList[
+                                                                      index]
+                                                                  .LastActivity!)
+                                                              .inHours <
+                                                          36
                                     ? Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -233,7 +238,7 @@ class _HOMESCRNState extends State<HOMESCRN> {
                                                                       index]
                                                                   .LastActivity!)
                                                               .inHours >
-                                                          24
+                                                          23
                                                       ? UAsset.COLD_FIRE
                                                       : UAsset.FIRE,
                                                   height: USize.Height / 33,
