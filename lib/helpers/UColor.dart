@@ -17,4 +17,5 @@ class UColor
   static const Color GreenHeavyColor = Color(0xFF308531);
   static const Color RedColor = Color(0xFFFE1D1D);
   static const Color RedHeavyColor = Color(0xFFB11B1B);
+  static const Color Transparent = Color(0xAAD0D0D0);
 }

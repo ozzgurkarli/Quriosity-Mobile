@@ -18,6 +18,8 @@ class UTextField extends StatelessWidget {
   String? hintText;
   Widget? prefixIcon;
   List<TextInputFormatter>? inputFormatters;
+  EdgeInsetsGeometry? contentPadding;
+  BoxConstraints? constraints;
   TextCapitalization? textCapitalization;
   Color? prefixColor;
   Color? fillColor;
@@ -40,6 +42,8 @@ class UTextField extends StatelessWidget {
       this.fillColor,
       this.fontSize,
       this.onSubmitted1,
+      this.contentPadding,
+      this.constraints,
       this.onSubmitted2,
       this.errorText,
       this.inputFormatters,
@@ -65,6 +69,8 @@ class UTextField extends StatelessWidget {
         onTapOutside: onSubmitted2,
         readOnly: readOnly ?? false,
         decoration: InputDecoration(
+          contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(12, 16, 12, 8),
+          constraints: constraints,
             filled: fillColor != null,
             isDense: true,
             fillColor: errorText != null ? UColor.RedLightColor : fillColor,

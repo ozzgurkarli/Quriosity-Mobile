@@ -8,5 +8,7 @@ class IService
   static const String RESET_PASSWORD = "resetPassword";
   static const String CREATE_COMMUNITY = "createCommunity";
   static const String COMMUNITIES = "communities";
+  static const String MESSAGES = "messages";
+  static const String SEND_MESSAGE = "sendMessage";
   static const String COMMUNITY_OPENED = "communityOpened";
 }
