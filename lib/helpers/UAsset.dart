@@ -11,4 +11,8 @@ class UAsset
   static String FIRE = "lib/assets/fire.gif";
   static String COLD_FIRE = "lib/assets/cold-fire.gif";
   static String LOGOUT = "lib/assets/logout.gif";
+  static String PP_0 = "lib/assets/pp_0.png";
+  static String PP_1 = "lib/assets/pp_1.png";
+  static String PP_2 = "lib/assets/pp_2.png";
+  static String PP_3 = "lib/assets/pp_3.png";
 }

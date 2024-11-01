@@ -10,5 +10,6 @@ class IService
   static const String COMMUNITIES = "communities";
   static const String MESSAGES = "messages";
   static const String SEND_MESSAGE = "sendMessage";
+  static const String COMMUNITY_USERNAMES = "communityUsernames";
   static const String COMMUNITY_OPENED = "communityOpened";
 }
