@@ -198,6 +198,7 @@ class _CRTACCTOState extends State<CRTACCTO> {
                 shakeOffset: 5,
                 shakeDuration: const Duration(milliseconds: 500),
                 child: UButton(
+                    color: UColor.WhiteHeavyColor,
                     onPressed: () async {
                       bool error = false;
                       if (nameSurnameController.text.split(' ').length < 2) {

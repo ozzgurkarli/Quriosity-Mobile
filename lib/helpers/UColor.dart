@@ -8,7 +8,7 @@ class UColor
   static const Color SecondHeavyColor = Color(0xFFEF6A00);
   // static const Color SecondHeavyColor = Color(0xFF308531);
   static const Color PrimaryColor = Color(0xFF37189E);
-  static const Color PrimaryLightColor = Color(0xFF7EA6FF);
+  static const Color PrimaryLightColor = Color(0xFF6949C5);
   static const Color ThirdColor = Color(0xFF52595D);
   static const Color WhiteColor = Color(0xFFEFEFEF);
   static const Color WhiteHeavyColor = Color(0xFFD0D0D0);

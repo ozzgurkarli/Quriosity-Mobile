@@ -105,7 +105,7 @@ class _HOMESCRNState extends State<HOMESCRN> {
             SizedBox(
               width: USize.Width * 0.7,
               child: UButton(
-                primaryButton: true,
+                    color: UColor.SecondHeavyColor,
                 onPressed: () async {
                   await Navigator.push(
                       context,

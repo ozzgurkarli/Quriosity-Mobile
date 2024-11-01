@@ -200,7 +200,7 @@ class HelperMethods {
                   ),
                 ),
                 UButton(
-                    primaryButton: true,
+                    color: UColor.SecondHeavyColor,
                     onPressed: () {
                       int count = 0;
                       popUntil = popUntil ?? 2;

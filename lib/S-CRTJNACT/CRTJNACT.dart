@@ -80,8 +80,8 @@ class _CRTJNACTState extends State<CRTJNACT> {
             ),
             UTextField(
               controller: invitationLinkController,
-              maxLength: 8,
-              hintText: Localizer.Get(Localizer.invitation_link),
+              maxLength: 12,
+              hintText: Localizer.Get(Localizer.invitation_code),
               fillColor: UColor.WhiteHeavyColor,
               prefixIcon: const Icon(Icons.share),
               suffixIcon: ShakeMe(
@@ -90,9 +90,24 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
                   child: UButton(
-                      primaryButton: true,
-                      onPressed: () {
+                      color: UColor.SecondHeavyColor,
+                      onPressed: () async {
                         shakeKeyJoin.currentState?.shake();
+                        if (invitationLinkController.text.length != 12) {
+                          HelperMethods.SetSnackBar(
+                              context,
+                              Localizer.Get(Localizer
+                                  .invitation_code_cannot_be_less_than_8_characters));
+                        }
+                        try {
+                          await UProxy.Request(
+                              URequestType.GET, IService.JOIN_COMMUNITY,
+                              param:
+                                  "${invitationLinkController.text}/${Pool.User.uid}");
+                          Navigator.pop(context);
+                        } catch (e) {
+                          HelperMethods.ApiException(context, e);
+                        }
                       },
                       child: UText(
                         Localizer.Get(Localizer.join),
@@ -151,7 +166,7 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
                   child: UButton(
-                      primaryButton: true,
+                      color: UColor.SecondHeavyColor,
                       onPressed: () async {
                         if (communityNameController.text.length < 4) {
                           shakeKeyCreate.currentState?.shake();

@@ -116,6 +116,7 @@ class _RSTPASSWDState extends State<RSTPASSWD> {
                 shakeOffset: 5,
                 shakeDuration: const Duration(milliseconds: 500),
                 child: UButton(
+                    color: UColor.WhiteHeavyColor,
                     onPressed: () {
                       bool error = false;
                       if (usernameController.text.length < 4) {

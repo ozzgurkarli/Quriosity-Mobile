@@ -145,6 +145,7 @@ class _LOGINACCState extends State<LOGINACC> {
                 shakeOffset: 5,
                 shakeDuration: const Duration(milliseconds: 500),
                 child: UButton(
+                    color: UColor.WhiteHeavyColor,
                     onPressed: () async {
                       bool error = false;
                       if (usernameController.text.length < 4) {
