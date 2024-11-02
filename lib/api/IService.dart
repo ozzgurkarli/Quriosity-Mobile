@@ -1,8 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
-class IService
-{
-  
+class IService {
   static const String ADD_USER = "addUser";
   static const String LOGIN = "login";
   static const String RESET_PASSWORD = "resetPassword";
@@ -15,5 +13,6 @@ class IService
   static const String COMMUNITY_USERNAMES = "communityUsernames";
   static const String NEW_QUESTION = "newQuestion";
   static const String INVITATION_CODE = "invitationCode";
+  static const String USER_ACTIVITY = "userActivities";
   static const String COMMUNITY_OPENED = "communityOpened";
 }

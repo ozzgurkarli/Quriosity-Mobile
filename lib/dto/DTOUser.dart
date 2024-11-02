@@ -3,18 +3,24 @@
 class DTOUser{
   String? NameSurname;
   String? Username;
+  String? CommunityId;
+  int? State;
   String? Email;
   String? Password;
   String? uid;
+  String? NotificationToken;
 
-  DTOUser({this.NameSurname, this.Username, this.Password, this.Email, this.uid});
+  DTOUser({this.NameSurname, this.Username, this.Password, this.CommunityId, this.State, this.Email, this.uid, this.NotificationToken});
 
   factory DTOUser.fromJson(Map<dynamic, dynamic> json) {
     return DTOUser(
       NameSurname: json['NameSurname'] as String?,
       Username: json['Username'] as String?,
+      CommunityId: json['CommunityId'] as String?,
+      State: json['State'] as int?,
       Email: json['Email'] as String?,
       Password: json['Password'] as String?,
+      NotificationToken: json['NotificationToken'] as String?,
       uid: json['uid'] as String?,
     );
   }
@@ -24,7 +30,10 @@ class DTOUser{
     return {
       'Username': Username,
       'NameSurname': NameSurname,
+      'CommunityId': CommunityId,
+      'State': State,
       'Email': Email,
+      'NotificationToken': NotificationToken,
       'Password': Password,
       'uid': uid,
     };

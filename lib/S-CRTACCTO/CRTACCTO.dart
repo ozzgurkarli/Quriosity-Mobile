@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
+import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UButton.dart';
@@ -253,6 +254,7 @@ class _CRTACCTOState extends State<CRTACCTO> {
                               .join(' '),
                           Email: emailController.text,
                           Password: passwordController.text,
+                          NotificationToken: ENV.NotificationToken,
                           Username: usernameController.text);
                       try {
                         await UProxy.Request(

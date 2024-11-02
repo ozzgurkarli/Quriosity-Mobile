@@ -9,8 +9,9 @@ class DTOQuestion{
   DateTime? QuestionDate;
   List? Options;
   List? Answers;
+  List? InactiveUsers;
 
-  DTOQuestion({this.id, this.senderuid, this.SenderUsername, this.CommunityId, this.Options, this.Question, this.Answers, this.QuestionDate});
+  DTOQuestion({this.id, this.senderuid, this.SenderUsername, this.CommunityId, this.Options, this.Question, this.InactiveUsers, this.Answers, this.QuestionDate});
 
   factory DTOQuestion.fromJson(Map<dynamic, dynamic> json) {
     return DTOQuestion(
@@ -22,6 +23,7 @@ class DTOQuestion{
       QuestionDate: DateTime.fromMillisecondsSinceEpoch(json['QuestionDate'] as int? ?? 1),
       Options: json['Password'] as List?,
       Answers: json['Answers'] as List?,
+      InactiveUsers: json['InactiveUsers'] as List?,
     );
   }
 
@@ -31,6 +33,7 @@ class DTOQuestion{
       'senderuid': senderuid,
       'id': id,
       'CommunityId': CommunityId,
+      'InactiveUsers': InactiveUsers,
       'Options': Options,
       'SenderUsername': SenderUsername,
       'Question': Question,
