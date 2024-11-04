@@ -53,6 +53,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   bool chatExpanded = false;
   bool newQuestionTab = false;
   double questionHeight = USize.Height * 0.1;
+  int questionIndex = 0;
+  PageController questionIndexController = PageController();
   Future<dynamic>? futureMsg;
   Future<dynamic>? futureQst;
   Future<dynamic>? futureAct;
@@ -84,7 +86,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         DTOUser(CommunityId: widget.communityId, uid: Pool.User.uid, State: 1);
     UProxy.Request(URequestType.POST, IService.USER_ACTIVITY,
         data: dtoUser.toJson());
-    futureMsg = UProxy.Request(URequestType.GET, IService.COMMUNITY_USERNAMES,
+    UProxy.Request(URequestType.GET, IService.COMMUNITY_USERNAMES,
             param: widget.communityId)
         .then((_users) {
       users = _users;
@@ -117,18 +119,36 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenQuestions();
         return q;
       });
-      return UProxy.Request(URequestType.GET, IService.MESSAGES,
-              param: widget.communityId)
-          .then((v) {
-        for (var i = 0; i < v.length; i++) {
-          DTOMessage msg = DTOMessage.fromJson(v[i]);
-          msg.SenderUsername = (_users as List)
-              .where((x) => x["uid"] == msg.senderuid)
-              .first["id"];
-          messages.add(msg);
-        }
-        listenChat();
-        return v;
+      futureMsg = HelperMethods.GetLastOpenedDate(widget.communityId).then((date) {
+        var data = UProxy.Request(
+          URequestType.GET,
+          IService.MESSAGES,
+          param: "${widget.communityId}/$date",
+        ).then((v) {
+          var d2 = HelperMethods.SelectFromLocalDB(
+                  "SELECT * FROM MESSAGES WHERE COMMUNITYID = '${widget.communityId}' ORDER BY MESSAGEDATE DESC")
+              .then((t) {
+            setState(() {
+              for (var i = 0; i < t.length; i++) {
+                messages.add(DTOMessage.fromJson(t[i]));
+              }
+
+              for (var i = 0; i < v.length; i++) {
+                DTOMessage msg = DTOMessage.fromJson(v[i]);
+                msg.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == msg.senderuid)
+                    .first["id"];
+                HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+                messages.insert(0, msg);
+              }
+            });
+            listenChat();
+            return t;
+          });
+          return d2;
+        });
+
+        return data;
       });
     });
   }
@@ -150,7 +170,19 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         if (usr.CommunityId == null) {
           activeUsers.removeWhere((x) => x.uid == usr.uid);
         } else {
-          usr.Username = (users).where((x) => x["uid"] == usr.uid).first["id"];
+          try {
+            usr.Username =
+                (users).where((x) => x["uid"] == usr.uid).first["id"];
+          } catch (e) {
+            if (e is StateError) {
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CMNTYHME(communityId: widget.communityId)));
+            }
+          }
           activeUsers.insert(0, usr);
         }
       });
@@ -178,6 +210,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         qst.SenderUsername =
             (users).where((x) => x["uid"] == qst.senderuid).first["id"];
         questions.insert(0, qst);
+        questionIndexController.jumpToPage(questionIndex);
       });
     });
   }
@@ -191,13 +224,21 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     bool firstRun = true;
     channelChat.stream.listen((message) {
       setState(() {
+        var mapMsg = jsonDecode(message);
+        HelperMethods.SetLastOpenedDate(widget.communityId,
+            DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
         if (firstRun) {
           firstRun = false;
           return;
         }
-        DTOMessage msg = DTOMessage.fromJson(jsonDecode(message));
+        DTOMessage msg = DTOMessage.fromJson(mapMsg);
         msg.SenderUsername =
             (users).where((x) => x["uid"] == msg.senderuid).first["id"];
+        HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+        if (msg.MessageDate!.isAfter(
+            DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]))) {
+          HelperMethods.SetLastOpenedDate(widget.communityId, msg.MessageDate!);
+        }
         messages.insert(0, msg);
       });
     });
@@ -249,41 +290,45 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   width: USize.Width * 0.8,
                   height: USize.Height * 0.8 - chatHeight,
                   decoration: const BoxDecoration(color: UColor.PrimaryColor),
-                  child: Positioned.fill(
-                    child: FutureBuilder(
-                        future: futureQst,
-                        builder: (context, snapshot) {
-                          snapshotQst = snapshot;
-                          if (!snapshot.hasData) {
-                            if (!loading) {
-                              loading = true;
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                HelperMethods.SetLoadingScreen(context);
-                              });
-                            }
-                            return const Center();
-                          }
-                          if (snapshotAct != null &&
-                              snapshotAct!.hasData &&
-                              snapshotMsg != null &&
-                              snapshotMsg!.hasData &&
-                              snapshotQst != null &&
-                              snapshotQst!.hasData &&
-                              !loaded) {
-                            loaded = true;
+                ),
+                Positioned.fill(
+                  child: FutureBuilder(
+                      future: futureQst,
+                      builder: (context, snapshot) {
+                        snapshotQst = snapshot;
+                        if (!snapshot.hasData) {
+                          if (!loading) {
+                            loading = true;
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              Navigator.pop(context);
+                              HelperMethods.SetLoadingScreen(context);
                             });
                           }
-                          return PageView.builder(
-                            itemCount: newQuestionTab ? 1 : questions.length,
-                            itemBuilder: (context, index) {
-                              return questionContainer(
-                                  question: newQuestionTab ? DTOQuestion() : questions[index]);
-                            },
-                          );
-                        }),
-                  ),
+                          return const Center();
+                        }
+                        if (snapshotAct != null &&
+                            snapshotAct!.hasData &&
+                            snapshotMsg != null &&
+                            snapshotMsg!.hasData &&
+                            snapshotQst != null &&
+                            snapshotQst!.hasData &&
+                            !loaded) {
+                          loaded = true;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Navigator.pop(context);
+                          });
+                        }
+                        return PageView.builder(
+                          itemCount: newQuestionTab ? 1 : questions.length,
+                          controller: questionIndexController,
+                          itemBuilder: (context, index) {
+                            questionIndex = index;
+                            return questionContainer(
+                                question: newQuestionTab
+                                    ? DTOQuestion()
+                                    : questions[index]);
+                          },
+                        );
+                      }),
                 ),
                 SizedBox(
                   width: USize.Width * 0.8,
@@ -315,7 +360,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                   senderuid: Pool.User.uid,
                                   Options: newQuestionOptions.reversed.toList(),
                                   CommunityId: widget.communityId,
-                                  InactiveUsers: users.where((x)=> !x["active"]).toList());
+                                  InactiveUsers: users
+                                      .where((x) => !x["active"])
+                                      .toList());
                               UProxy.Request(
                                   URequestType.POST, IService.NEW_QUESTION,
                                   data: question.toJson());
@@ -375,7 +422,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               alignment: Alignment.topCenter,
               children: [
                 Container(
-                  width: USize.Width * 0.8,
+                  width: USize.Width * 0.95,
                   height: chatHeight,
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(15)),
@@ -385,7 +432,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           future: futureMsg,
                           builder: (context, snapshot) {
                             snapshotMsg = snapshot;
-                            if (!snapshot.hasData) {
+                            if (snapshotMsg!.connectionState ==
+                                ConnectionState.waiting) {
                               if (!loading) {
                                 loading = true;
                                 WidgetsBinding.instance
@@ -396,18 +444,23 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                               return const Center();
                             }
                             if (snapshotAct != null &&
-                                snapshotAct!.hasData &&
+                                snapshotAct!.connectionState ==
+                                    ConnectionState.done &&
                                 snapshotMsg != null &&
-                                snapshotMsg!.hasData &&
+                                snapshotMsg!.connectionState ==
+                                    ConnectionState.done &&
                                 snapshotQst != null &&
-                                snapshotQst!.hasData &&
+                                snapshotQst!.connectionState ==
+                                    ConnectionState.done &&
                                 !loaded) {
                               loaded = true;
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 Navigator.pop(context);
                               });
                             }
-                      
+                            snapshotAct!.data;
+                            snapshotQst!.data;
+                            snapshotMsg!.data;
                             return Expanded(
                               child: MediaQuery.removePadding(
                                 context: context,
@@ -430,6 +483,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                               ? MainAxisAlignment.end
                                               : MainAxisAlignment.start,
                                       children: [
+                                        Align(
+                                            alignment: Alignment.center,
+                                            child: showDate(index)),
                                         showUsername(
                                             (messages[index].senderuid !=
                                                     Pool.User.uid) &&
@@ -452,12 +508,28 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                                               .senderuid)),
                                         ),
                                         Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          textDirection:
+                                              messages[index].senderuid ==
+                                                      Pool.User.uid
+                                                  ? TextDirection.ltr
+                                                  : TextDirection.rtl,
                                           mainAxisAlignment:
                                               messages[index].senderuid ==
                                                       Pool.User.uid
                                                   ? MainAxisAlignment.end
                                                   : MainAxisAlignment.start,
                                           children: [
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      USize.Width * 0.01),
+                                              child: UText(
+                                                "${messages[index].MessageDate!.hour.toString().padLeft(2, '0')}:${messages[index].MessageDate!.minute.toString().padLeft(2, '0')}",
+                                                fontSize: 11,
+                                                color: UColor.WhiteHeavyColor,
+                                              ),
+                                            ),
                                             Flexible(
                                               child: Padding(
                                                 padding: EdgeInsets.only(
@@ -540,7 +612,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           }),
                       Gap(USize.Height / 100),
                       UTextField(
-                        width: USize.Width * 0.8,
+                        width: USize.Width * 0.95,
                         controller: messageController,
                         constraints:
                             BoxConstraints(maxHeight: USize.Height / 22),
@@ -587,6 +659,27 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         ),
       ),
     );
+  }
+
+  Widget showDate(int index) {
+    if (index == messages.length - 1 ||
+        messages[index + 1].MessageDate!.day !=
+            messages[index].MessageDate!.day) {
+      return Padding(
+        padding: const EdgeInsets.only(
+          top: 10,
+          bottom: 20,
+        ),
+        child: UText(
+          "${messages[index].MessageDate!.day.toString().padLeft(2, '0')}.${messages[index].MessageDate!.month.toString().padLeft(2, '0')}.${messages[index].MessageDate!.year}",
+          color: UColor.WhiteColor,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
   Widget showUsername(bool showUsername, String message, bool question) {
@@ -724,74 +817,78 @@ class _CMNTYHMEState extends State<CMNTYHME> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          showUsername(true, Pool.User.Username!, true),
-          CustomPaint(
-            painter: TrianglePainter(paintTriangle: true),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
             children: [
-              Flexible(
-                child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: USize.Width / 67,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: UColor.WhiteColor,
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(12),
-                        bottomLeft: Radius.circular(12),
-                      ),
-                    ),
-                    child: UTextField(
-                        hintText: "Soru", controller: newQuestionController)),
+              showUsername(true, Pool.User.Username!, true),
+              CustomPaint(
+                painter: TrianglePainter(paintTriangle: true),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: USize.Width / 67,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: UColor.WhiteColor,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
+                          ),
+                        ),
+                        child: UTextField(
+                            hintText: "Soru",
+                            controller: newQuestionController)),
+                  ),
+                ],
               ),
             ],
           ),
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
-                height: USize.Height * 0.55,
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeBottom: true,
-                  removeTop: true,
-                  child: ListView.builder(
-                    reverse: true,
-                    itemCount: newQuestionOptions.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: EdgeInsets.all(USize.Height * 0.01),
-                        child: Container(
-                          width: USize.Width * 0.8,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: USize.Width / 50,
-                            vertical: USize.Width / 67,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: UColor.WhiteHeavyColor,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(12),
-                              bottomLeft: Radius.circular(12),
-                            ),
-                          ),
-                          child: UText(
-                            newQuestionOptions[index]
-                                .entries
-                                .where((x) => x.key == "option")
-                                .first
-                                .value,
-                            color: UColor.PrimaryColor,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+              MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                removeTop: true,
+                child: ListView.builder(
+                  reverse: true,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: newQuestionOptions.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.all(USize.Height * 0.01),
+                      child: Container(
+                        width: USize.Width * 0.8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: USize.Width / 50,
+                          vertical: USize.Width / 67,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: UColor.WhiteColor,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                        child: UText(
+                          newQuestionOptions[index]
+                              .entries
+                              .where((x) => x.key == "option")
+                              .first
+                              .value,
+                          color: UColor.PrimaryColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               UTextField(
@@ -840,70 +937,30 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                         ))),
                 fillColor: UColor.WhiteHeavyColor,
               ),
+              Gap(USize.Height * 0.05)
             ],
           )
         ],
       );
     } else if (chatExpanded && !secondCall) {
       return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment:
-        chatExpanded ? MainAxisAlignment.center : MainAxisAlignment.start,
-              children: [
-      showUsername(true, question!.SenderUsername!, true),
-      Padding(
-        padding: EdgeInsets.only(right: USize.Width * 0.05),
-        child: CustomPaint(
-          painter: TrianglePainter(paintTriangle: true),
-        ),
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment:
+            chatExpanded ? MainAxisAlignment.start : MainAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: USize.Width / 50,
-              vertical: USize.Width / 67,
-            ),
-            decoration: const BoxDecoration(
-              color: UColor.WhiteColor,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-            ),
-            child: UText(
-              question.Question!,
-              color: UColor.PrimaryColor,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+          showUsername(true, question!.SenderUsername!, true),
+          Padding(
+            padding: EdgeInsets.only(right: USize.Width * 0.05),
+            child: CustomPaint(
+              painter: TrianglePainter(paintTriangle: true),
             ),
           ),
-        ],
-      )
-              ],
-            );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Column(
-          children: [
-            showUsername(true, question!.SenderUsername!, true),
-            Padding(
-              padding: EdgeInsets.only(right: USize.Width * 0.05),
-              child: CustomPaint(
-                painter: TrianglePainter(paintTriangle: true),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: USize.Width / 50,
                     vertical: USize.Width / 67,
@@ -922,36 +979,88 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
+              ),
+            ],
+          )
+        ],
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          children: [
+            showUsername(true, question!.SenderUsername!, true),
+            Padding(
+              padding: EdgeInsets.only(right: USize.Width * 0.05),
+              child: CustomPaint(
+                painter: TrianglePainter(paintTriangle: true),
+              ),
             ),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.only(bottom: USize.Width * 0.05),
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: question.Options!.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.all(USize.Height * 0.01),
-                child: Container(
-                    width: USize.Width * 0.8,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: USize.Width / 50,
                       vertical: USize.Width / 67,
                     ),
                     decoration: const BoxDecoration(
-                      color: UColor.WhiteHeavyColor,
+                      color: UColor.WhiteColor,
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(12),
                         bottomLeft: Radius.circular(12),
                       ),
                     ),
-                    child: optionContainer(question, index)),
-              );
-            },
-          ),
+                    child: UText(
+                      question.Question!,
+                      color: UColor.PrimaryColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              removeBottom: true,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: question.Options!.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.all(USize.Height * 0.01),
+                    child: Container(
+                        width: USize.Width * 0.8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: USize.Width / 50,
+                          vertical: USize.Width / 100,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: UColor.WhiteColor,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
+                          ),
+                        ),
+                        child: optionContainer(question, index)),
+                  );
+                },
+              ),
+            ),
+            Gap(USize.Height * 0.05)
+          ],
         ),
       ],
     );

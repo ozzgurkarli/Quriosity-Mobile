@@ -1,4 +1,4 @@
-// ignore_for_file: no_leading_underscores_for_local_identifiers
+// ignore_for_file: no_leading_underscores_for_local_identifiers, non_constant_identifier_names
 
 import 'dart:io';
 
@@ -7,6 +7,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:quriosity/S-SPLSHSCR/SPLSHSCR.dart';
 import 'package:quriosity/api/ENV.dart';
+import 'package:quriosity/helpers/HelperMethods.dart';
+import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/USize.dart';
 
@@ -58,14 +60,27 @@ void main() async {
   _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
     if (message != null) {}
   });
+  String uid = await HelperMethods.Getuid();
+  String Username = await HelperMethods.GetUsername();
+
+  if (uid.isNotEmpty && Username.isNotEmpty) {
+    Pool.User.uid = uid;
+    Pool.User.Username = Username;
+  }
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   runApp(const MyApp());
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  String uid = await HelperMethods.Getuid();
+  String Username = await HelperMethods.GetUsername();
+
+  if (uid.isNotEmpty && Username.isNotEmpty) {
+    Pool.User.uid = uid;
+    Pool.User.Username = Username;
+  }
 }
 
 class MyApp extends StatelessWidget {
