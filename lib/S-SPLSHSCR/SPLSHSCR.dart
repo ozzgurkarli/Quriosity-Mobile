@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quriosity/S-HOMESCRN/HOMESCRN.dart';
 import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
+import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UText.dart';
@@ -32,6 +33,7 @@ class _SPLSHSCRState extends State<SPLSHSCR> {
         Pool.User = DTOUser.fromJson(await UProxy.Request(
             URequestType.POST, IService.LOGIN,
             data: Pool.User.toJson()));
+        ENV.UserToken = Pool.User.UserToken;
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const HOMESCRN()),

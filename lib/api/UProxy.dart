@@ -11,13 +11,14 @@ class UProxy {
     dio.options.validateStatus = (status) {
       return status != null && status < 501;
     };
+    dio.options.headers["authorization"] = "Bearer ${ENV.UserToken}";
 
     try {
       if (Type == 1) {
         response = await proxy.Post(dio, route, data!);
       } else if (Type == 2) {
         response = await proxy.Get(dio, route, param: param);
-      }else if (Type == 3) {
+      } else if (Type == 3) {
         response = await proxy.Put(dio, route, data!);
       }
     } catch (e) {
@@ -33,7 +34,8 @@ class UProxy {
     return response.data;
   }
 
-  Future<Response> Post(Dio dio, String route, Map<String, dynamic> data) async {
+  Future<Response> Post(
+      Dio dio, String route, Map<String, dynamic> data) async {
     final url = "${ENV.ConnectionString}$route";
     return await dio.post(url, data: data);
   }

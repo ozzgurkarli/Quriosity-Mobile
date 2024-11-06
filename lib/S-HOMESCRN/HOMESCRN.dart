@@ -103,7 +103,7 @@ class _HOMESCRNState extends State<HOMESCRN> {
               height: USize.Height / 50,
             ),
             SizedBox(
-              width: USize.Width * 0.7,
+              width: USize.Width * 0.8,
               child: UButton(
                     color: UColor.SecondHeavyColor,
                 onPressed: () async {
@@ -139,7 +139,7 @@ class _HOMESCRNState extends State<HOMESCRN> {
               height: USize.Height / 50,
             ),
             Container(
-              width: USize.Width * 0.7,
+              width: USize.Width * 0.8,
               height: USize.Height / 1.7,
               decoration: BoxDecoration(
                   color: UColor.WhiteHeavyColor,

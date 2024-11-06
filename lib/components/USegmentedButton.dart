@@ -14,7 +14,7 @@ class USegmentedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: USize.Width * 0.7,
+      width: USize.Width * 0.8,
       child: SegmentedButton(
         showSelectedIcon: false,
           style: ButtonStyle(

@@ -183,6 +183,7 @@ class _LOGINACCState extends State<LOGINACC> {
 
                         if (dtoUser.uid != null) {
                           Pool.User = dtoUser;
+                          ENV.UserToken = dtoUser.UserToken;
                           HelperMethods.InsertData();
                           Navigator.pushAndRemoveUntil(
                               context,
