@@ -102,6 +102,37 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenActiveUsers();
         return a;
       });
+      // futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
+      //   var data = UProxy.Request(
+      //     URequestType.GET,
+      //     IService.QUESTIONS,
+      //     param: "${widget.communityId}/$date",
+      //   ).then((v) {
+      //     var d2 = HelperMethods.SelectFromLocalDB(
+      //             "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' ORDER BY QUESTIONDATE DESC")
+      //         .then((t) {
+      //       setState(() {
+      //         for (var i = 0; i < t.length; i++) {
+      //           messages.add(DTOMessage.fromJson(t[i]));
+      //         }
+
+      //         for (var i = 0; i < v.length; i++) {
+      //           DTOMessage msg = DTOMessage.fromJson(v[i]);
+      //           msg.SenderUsername = (_users as List)
+      //               .where((x) => x["uid"] == msg.senderuid)
+      //               .first["id"];
+      //           HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+      //           messages.insert(0, msg);
+      //         }
+      //       });
+      //       listenChat();
+      //       return t;
+      //     });
+      //     return d2;
+      //   });
+
+      //   return data;
+      // });
       futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
               param: widget.communityId)
           .then((q) {
@@ -119,7 +150,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenQuestions();
         return q;
       });
-      futureMsg = HelperMethods.GetLastOpenedDate(widget.communityId).then((date) {
+      futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId).then((date) {
         var data = UProxy.Request(
           URequestType.GET,
           IService.MESSAGES,
@@ -139,7 +170,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     .where((x) => x["uid"] == msg.senderuid)
                     .first["id"];
                 HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
-                messages.insert(0, msg);
+                messages.insert(i, msg);
               }
             });
             listenChat();
@@ -225,7 +256,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     channelChat.stream.listen((message) {
       setState(() {
         var mapMsg = jsonDecode(message);
-        HelperMethods.SetLastOpenedDate(widget.communityId,
+        HelperMethods.SetLastOpenedDate("MSG", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
         if (firstRun) {
           firstRun = false;
@@ -237,7 +268,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
         if (msg.MessageDate!.isAfter(
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]))) {
-          HelperMethods.SetLastOpenedDate(widget.communityId, msg.MessageDate!);
+          HelperMethods.SetLastOpenedDate("MSG", widget.communityId, msg.MessageDate!);
         }
         messages.insert(0, msg);
       });

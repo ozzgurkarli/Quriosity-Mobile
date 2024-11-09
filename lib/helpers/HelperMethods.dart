@@ -87,16 +87,16 @@ class HelperMethods {
     return sp.getString("Username") ?? "";
   }
 
-  static SetLastOpenedDate(String CommunityId, DateTime time) async {
+  static SetLastOpenedDate(String Type, String CommunityId, DateTime time) async {
     var sp = await SharedPreferences.getInstance();
-    sp.setInt(CommunityId, time.millisecondsSinceEpoch);
+    sp.setInt(Type+CommunityId, time.millisecondsSinceEpoch);
     return;
   }
 
-  static Future<int> GetLastOpenedDate(String CommunityId) async {
+  static Future<int> GetLastOpenedDate(String Type, String CommunityId) async {
     var sp = await SharedPreferences.getInstance();
 
-    return sp.getInt(CommunityId) ?? 0;
+    return sp.getInt(Type+CommunityId) ?? 0;
   }
 
   static Future<Database> DatabaseConnect() async {
