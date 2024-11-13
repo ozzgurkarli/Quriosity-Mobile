@@ -23,6 +23,7 @@ class UTextField extends StatelessWidget {
   TextCapitalization? textCapitalization;
   Color? prefixColor;
   Color? fillColor;
+  EdgeInsets? scrollPadding;
   Widget? suffixIcon;
   double? fontSize;
   String? errorText;
@@ -35,6 +36,7 @@ class UTextField extends StatelessWidget {
       this.width,
       this.readOnly,
       this.hintText,
+      this.scrollPadding,
       this.prefixColor,
       this.textCapitalization,
       this.onChanged,
@@ -66,6 +68,7 @@ class UTextField extends StatelessWidget {
         style: TextStyle(fontSize: fontSize ?? 15, fontWeight: FontWeight.w500),
         obscureText: obsecureText ?? false,
         onSubmitted: onSubmitted1,
+        scrollPadding: scrollPadding ?? const EdgeInsets.all(20),
         onTapOutside: onSubmitted2,
         readOnly: readOnly ?? false,
         decoration: InputDecoration(

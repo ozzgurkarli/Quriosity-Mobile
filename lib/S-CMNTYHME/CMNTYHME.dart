@@ -668,7 +668,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       Message: messageController.text,
                                       CommunityId: widget.communityId,
                                       senderuid: Pool.User.uid,
-                                      QuestionId: "3131");
+                                      QuestionId: questions[questionIndex].id);
                                   messageController.text = "";
                                   UProxy.Request(
                                       URequestType.POST, IService.SEND_MESSAGE,
@@ -926,6 +926,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 width: USize.Width * 0.8,
                 controller: newOptionController,
                 hintText: "Seçenek ekle...",
+                scrollPadding: EdgeInsets.fromLTRB(20, 20, 20, USize.Height*0.065),
                 readOnly: newQuestionOptions.length > 3,
                 constraints: BoxConstraints(maxHeight: USize.Height / 22),
                 suffixIcon: ShakeMe(
