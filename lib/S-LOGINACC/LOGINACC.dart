@@ -6,6 +6,7 @@ import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:quriosity/S-CRTACCTO/CRTACCTO.dart';
 import 'package:quriosity/S-HOMESCRN/HOMESCRN.dart';
 import 'package:quriosity/S-RSTPASSWD/RSTPASSWD.dart';
+import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UButton.dart';
@@ -145,6 +146,7 @@ class _LOGINACCState extends State<LOGINACC> {
                 shakeOffset: 5,
                 shakeDuration: const Duration(milliseconds: 500),
                 child: UButton(
+                    color: UColor.WhiteHeavyColor,
                     onPressed: () async {
                       bool error = false;
                       if (usernameController.text.length < 4) {
@@ -171,6 +173,7 @@ class _LOGINACCState extends State<LOGINACC> {
 
                       HelperMethods.SetLoadingScreen(context);
                       DTOUser dtoUser = DTOUser(
+                        NotificationToken: ENV.NotificationToken,
                           Username: usernameController.text,
                           Password: passwordController.text);
                       try {
@@ -180,6 +183,8 @@ class _LOGINACCState extends State<LOGINACC> {
 
                         if (dtoUser.uid != null) {
                           Pool.User = dtoUser;
+                          ENV.UserToken = dtoUser.UserToken;
+                          HelperMethods.InsertData();
                           Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
@@ -187,6 +192,7 @@ class _LOGINACCState extends State<LOGINACC> {
                               (route) => false);
                         }
                       } catch (e) {
+                        ENV.ConnectionString = ENV.ConnectionStringList[2];
                         HelperMethods.ApiException(context, e, key: shakeKey);
                       }
                     },

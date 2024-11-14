@@ -42,3 +42,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 lib/api/ENV.dart
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json

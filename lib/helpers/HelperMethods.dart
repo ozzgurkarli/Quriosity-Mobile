@@ -1,18 +1,25 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:gap/gap.dart';
+import 'package:path/path.dart';
+import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UText.dart';
 import 'package:quriosity/helpers/Localizer.dart';
+import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/USize.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 class HelperMethods {
-
   static Widget ShowAsset(String path, {double? height, double? width}) {
     return Image.asset(
       path,
@@ -22,19 +29,21 @@ class HelperMethods {
     );
   }
 
-  static String CalculateLastActivityTime(DateTime date){
+  static String CalculateLastActivityTime(DateTime date) {
     Duration dif = DateTime.now().difference(date);
 
-    if(dif.inDays > 0){
-      return dif.inDays > 30 ? dif.inDays > 365 ? "${dif.inDays~/365}y" : "${dif.inDays~/30}${Localizer.Get(Localizer.shortened_month)}" : "${dif.inDays}${Localizer.Get(Localizer.shortened_day)}";
-    }
-    else if(dif.inHours > 0){
+    if (dif.inDays > 0) {
+      return dif.inDays > 30
+          ? dif.inDays > 365
+              ? "${dif.inDays ~/ 365}y"
+              : "${dif.inDays ~/ 30}${Localizer.Get(Localizer.shortened_month)}"
+          : "${dif.inDays}${Localizer.Get(Localizer.shortened_day)}";
+    } else if (dif.inHours > 0) {
       return "${dif.inHours}${Localizer.Get(Localizer.shortened_hour)}";
-    }
-    else if(dif.inMinutes > 0){
+    } else if (dif.inMinutes > 0) {
       return "${dif.inMinutes}${Localizer.Get(Localizer.shortened_minute)}";
     }
-    
+
     return "${dif.inSeconds}${Localizer.Get(Localizer.shortened_second)}";
   }
 
@@ -52,31 +61,73 @@ class HelperMethods {
     );
   }
 
-  // static InsertData(String fullName, String identityNo) async {
-  //   var sp = await SharedPreferences.getInstance();
+  static InsertData() async {
+    var sp = await SharedPreferences.getInstance();
 
-  //   sp.setString("IdentityNo", identityNo);
-  //   sp.setString("FullName", fullName);
-  // }
+    sp.setString("uid", Pool.User.uid!);
+    sp.setString("Username", Pool.User.Username!);
+  }
 
-  // static DeleteData() async {
-  //   var sp = await SharedPreferences.getInstance();
+  static DeleteData() async {
+    var sp = await SharedPreferences.getInstance();
 
-  //   await sp.remove("IdentityNo");
-  //   await sp.remove("FullName");
-  // }
+    await sp.remove("uid");
+    await sp.remove("Username");
+  }
 
-  // static Future<String?> GetIdentityNo() async {
-  //   var sp = await SharedPreferences.getInstance();
+  static Future<String> Getuid() async {
+    var sp = await SharedPreferences.getInstance();
 
-  //   return sp.getString("IdentityNo") ?? "";
-  // }
+    return sp.getString("uid") ?? "";
+  }
 
-  // static Future<String?> GetFullName() async {
-  //   var sp = await SharedPreferences.getInstance();
+  static Future<String> GetUsername() async {
+    var sp = await SharedPreferences.getInstance();
 
-  //   return sp.getString("FullName") ?? "";
-  // }
+    return sp.getString("Username") ?? "";
+  }
+
+  static SetLastOpenedDate(String Type, String CommunityId, DateTime time) async {
+    var sp = await SharedPreferences.getInstance();
+    sp.setInt(Type+CommunityId, time.millisecondsSinceEpoch);
+    return;
+  }
+
+  static Future<int> GetLastOpenedDate(String Type, String CommunityId) async {
+    var sp = await SharedPreferences.getInstance();
+
+    return sp.getInt(Type+CommunityId) ?? 0;
+  }
+
+  static Future<Database> DatabaseConnect() async {
+    String dbPath = join(await getDatabasesPath(), ENV.DatabaseName);
+
+    if (!(await databaseExists(dbPath))) {
+      ByteData data = await rootBundle.load("lib/localdb/${ENV.DatabaseName}");
+      List<int> bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+      await File(dbPath).writeAsBytes(bytes, flush: true);
+    }
+
+    return openDatabase(dbPath);
+  }
+
+  static InsertLocalDB(String tableName, Map<String, dynamic> data) async {
+    Database db = await HelperMethods.DatabaseConnect();
+    if (tableName == "MESSAGES") {
+      data["MessageDate"] =
+          (data["MessageDate"] as DateTime).millisecondsSinceEpoch;
+    }
+    await db.insert(tableName, data);
+  }
+
+  static Future<List<Map<String, dynamic>>> SelectFromLocalDB(
+      String query) async {
+    Database db = await HelperMethods.DatabaseConnect();
+
+    return await db.rawQuery(query);
+  }
 
   static SetSnackBar(BuildContext context, String text,
       {bool errorBar = false,
@@ -152,7 +203,8 @@ class HelperMethods {
   static ApiException(BuildContext context, Object exception,
       {int? popUntil, GlobalKey<ShakeWidgetState>? key}) {
     if (exception is! DioException) {
-      HelperMethods.SetSnackBar(context, exception.toString().substring(11), errorBar: true);
+      HelperMethods.SetSnackBar(context, exception.toString().substring(11),
+          errorBar: true);
       Navigator.pop(context);
       if (key != null) {
         key.currentState?.shake();
@@ -200,7 +252,7 @@ class HelperMethods {
                   ),
                 ),
                 UButton(
-                    primaryButton: true,
+                    color: UColor.SecondHeavyColor,
                     onPressed: () {
                       int count = 0;
                       popUntil = popUntil ?? 2;
