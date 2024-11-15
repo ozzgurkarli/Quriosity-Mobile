@@ -101,7 +101,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         }
         listenActiveUsers();
         return a;
-      });
+      }); 
       futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
         var data = UProxy.Request(
           URequestType.GET,
