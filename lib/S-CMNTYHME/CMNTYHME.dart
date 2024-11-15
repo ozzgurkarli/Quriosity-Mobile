@@ -102,37 +102,38 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenActiveUsers();
         return a;
       });
-      // futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
-      //   var data = UProxy.Request(
-      //     URequestType.GET,
-      //     IService.QUESTIONS,
-      //     param: "${widget.communityId}/$date",
-      //   ).then((v) {
-      //     var d2 = HelperMethods.SelectFromLocalDB(
-      //             "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' ORDER BY QUESTIONDATE DESC")
-      //         .then((t) {
-      //       setState(() {
-      //         for (var i = 0; i < t.length; i++) {
-      //           messages.add(DTOMessage.fromJson(t[i]));
-      //         }
+      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
+        var data = UProxy.Request(
+          URequestType.GET,
+          IService.QUESTIONS,
+          param: "${widget.communityId}/$date",
+        ).then((v) {
+          var d2 = HelperMethods.SelectFromLocalDB(
+                  "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
+              .then((t) {
+            setState(() {
+              
+              for (var i = 0; i < t.length; i++) {
+                questions.add(DTOQuestion.fromJson(t[i]));
+              }
 
-      //         for (var i = 0; i < v.length; i++) {
-      //           DTOMessage msg = DTOMessage.fromJson(v[i]);
-      //           msg.SenderUsername = (_users as List)
-      //               .where((x) => x["uid"] == msg.senderuid)
-      //               .first["id"];
-      //           HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
-      //           messages.insert(0, msg);
-      //         }
-      //       });
-      //       listenChat();
-      //       return t;
-      //     });
-      //     return d2;
-      //   });
+              for (var i = 0; i < v.length; i++) {
+                DTOMessage msg = DTOMessage.fromJson(v[i]);
+                msg.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == msg.senderuid)
+                    .first["id"];
+                HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+                messages.insert(0, msg);
+              }
+            });
+            listenChat();
+            return t;
+          });
+          return d2;
+        });
 
-      //   return data;
-      // });
+        return data;
+      });
       futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
               param: widget.communityId)
           .then((q) {
@@ -150,14 +151,15 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenQuestions();
         return q;
       });
-      futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId).then((date) {
+      futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId)
+          .then((date) {
         var data = UProxy.Request(
           URequestType.GET,
           IService.MESSAGES,
           param: "${widget.communityId}/$date",
         ).then((v) {
           var d2 = HelperMethods.SelectFromLocalDB(
-                  "SELECT * FROM MESSAGES WHERE COMMUNITYID = '${widget.communityId}' ORDER BY MESSAGEDATE DESC")
+                  "SELECT * FROM MESSAGES WHERE COMMUNITYID = '${widget.communityId}' AND LOCALUID = '${Pool.User.uid}' ORDER BY MESSAGEDATE DESC")
               .then((t) {
             setState(() {
               for (var i = 0; i < t.length; i++) {
@@ -169,7 +171,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 msg.SenderUsername = (_users as List)
                     .where((x) => x["uid"] == msg.senderuid)
                     .first["id"];
-                HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+                Map<String, dynamic> jsonMsg = msg.toJson();
+                jsonMsg["Localuid"] = Pool.User.uid;
+                HelperMethods.InsertLocalDB("MESSAGES", jsonMsg);
                 messages.insert(i, msg);
               }
             });
@@ -265,10 +269,13 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         DTOMessage msg = DTOMessage.fromJson(mapMsg);
         msg.SenderUsername =
             (users).where((x) => x["uid"] == msg.senderuid).first["id"];
-        HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+        Map<String, dynamic> jsonMsg = msg.toJson();
+        jsonMsg["Localuid"] = Pool.User.uid;
+        HelperMethods.InsertLocalDB("MESSAGES", jsonMsg);
         if (msg.MessageDate!.isAfter(
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]))) {
-          HelperMethods.SetLastOpenedDate("MSG", widget.communityId, msg.MessageDate!);
+          HelperMethods.SetLastOpenedDate(
+              "MSG", widget.communityId, msg.MessageDate!);
         }
         messages.insert(0, msg);
       });
@@ -926,7 +933,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 width: USize.Width * 0.8,
                 controller: newOptionController,
                 hintText: "Seçenek ekle...",
-                scrollPadding: EdgeInsets.fromLTRB(20, 20, 20, USize.Height*0.065),
+                scrollPadding:
+                    EdgeInsets.fromLTRB(20, 20, 20, USize.Height * 0.065),
                 readOnly: newQuestionOptions.length > 3,
                 constraints: BoxConstraints(maxHeight: USize.Height / 22),
                 suffixIcon: ShakeMe(
