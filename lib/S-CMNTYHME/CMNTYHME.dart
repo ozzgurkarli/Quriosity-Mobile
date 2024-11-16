@@ -41,12 +41,15 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   TextEditingController newOptionController = TextEditingController();
   PageController pageController = PageController();
   List<Map<String, dynamic>> newQuestionOptions = [];
+  DateTime lastOptionChooseDate = DateTime(1);
+  int lastOptionQuestionIndex = -1;
   late final WebSocketChannel channelChat;
   late final WebSocketChannel channelQuestions;
   late final WebSocketChannel channelActiveUsers;
   List<DTOMessage> messages = [];
   List<DTOQuestion> questions = [];
   List<DTOUser> activeUsers = [];
+  int userOption = -1;
   List users = [];
   DTOInvitationCode? invitationCode;
   double chatHeight = USize.Height * 0.23;
@@ -101,39 +104,41 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         }
         listenActiveUsers();
         return a;
-      }); 
-      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
-        var data = UProxy.Request(
-          URequestType.GET,
-          IService.QUESTIONS,
-          param: "${widget.communityId}/$date",
-        ).then((v) {
-          var d2 = HelperMethods.SelectFromLocalDB(
-                  "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
-              .then((t) {
-            setState(() {
-              
-              for (var i = 0; i < t.length; i++) {
-                questions.add(DTOQuestion.fromJson(t[i]));
-              }
-
-              for (var i = 0; i < v.length; i++) {
-                DTOMessage msg = DTOMessage.fromJson(v[i]);
-                msg.SenderUsername = (_users as List)
-                    .where((x) => x["uid"] == msg.senderuid)
-                    .first["id"];
-                HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
-                messages.insert(0, msg);
-              }
-            });
-            listenChat();
-            return t;
-          });
-          return d2;
-        });
-
-        return data;
       });
+      // futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
+      //   var data = UProxy.Request(
+      //     URequestType.GET,
+      //     IService.QUESTIONS,
+      //     param: "${widget.communityId}/$date",
+      //   ).then((v) {
+      //     var d2 = HelperMethods.SelectFromLocalDB(
+      //             "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
+      //         .then((t) {
+      //       setState(() {
+
+      //         for (var i = 0; i < t.length; i++) {
+      //           questions.add(DTOQuestion.fromJson(t[i]));
+      //         }
+
+      //         for (var i = 0; i < v.length; i++) {
+      //           DTOQuestion qst = DTOQuestion.fromJson(v[i]);
+      //           qst.SenderUsername = (_users as List)
+      //               .where((x) => x["uid"] == qst.senderuid)
+      //               .first["id"];
+      //           Map<String, dynamic> jsonQst = qst.toJson();
+      //           jsonQst["Localuid"] = Pool.User.uid;
+      //           HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
+      //           questions.insert(0, qst);
+      //         }
+      //       });
+      //       listenChat();
+      //       return t;
+      //     });
+      //     return d2;
+      //   });
+
+      //   return data;
+      // });
       futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
               param: widget.communityId)
           .then((q) {
@@ -277,7 +282,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
           HelperMethods.SetLastOpenedDate(
               "MSG", widget.communityId, msg.MessageDate!);
         }
-        messages.insert(0, msg);
+        if (msg.senderuid != Pool.User.uid) {
+          messages.insert(0, msg);
+        }
       });
     });
   }
@@ -360,6 +367,15 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           controller: questionIndexController,
                           itemBuilder: (context, index) {
                             questionIndex = index;
+                            List x = [];
+                            if (questions[index].Answers != null) {
+                              x = questions[index]
+                                  .Answers!
+                                  .where((x) =>
+                                      x["Username"] == Pool.User.Username)
+                                  .toList();
+                            }
+                            userOption = x.isEmpty ? -1 : x.first["id"];
                             return questionContainer(
                                 question: newQuestionTab
                                     ? DTOQuestion()
@@ -677,9 +693,14 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       senderuid: Pool.User.uid,
                                       QuestionId: questions[questionIndex].id);
                                   messageController.text = "";
+                                  msg.SenderUsername = Pool.User.Username;
+                                  msg.MessageDate = DateTime.now();
+                                  messages.insert(0, msg);
+                                  Map<String, dynamic> mapMsg = msg.toJson();
+                                  mapMsg["MessageDate"] = null;
                                   UProxy.Request(
                                       URequestType.POST, IService.SEND_MESSAGE,
-                                      data: msg.toJson());
+                                      data: mapMsg);
                                 },
                                 child: const Icon(
                                   Icons.arrow_forward,
@@ -1081,20 +1102,51 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: EdgeInsets.all(USize.Height * 0.01),
-                    child: Container(
-                        width: USize.Width * 0.8,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: USize.Width / 50,
-                          vertical: USize.Width / 100,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: UColor.WhiteColor,
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(12),
-                            bottomLeft: Radius.circular(12),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (onOptionChoose(0)) {
+                            if (userOption == index ||
+                                (userOption != -1 && userOption != index)) {
+                              question.Answers!.removeWhere(
+                                  (x) => x["Username"] == Pool.User.Username);
+                              if (userOption == index) {
+                                userOption = -1;
+                                return;
+                              }
+                            }
+                            userOption = index;
+                            question.Answers ??= [];
+                            Map<String, dynamic> mapAns = {
+                              "Username": Pool.User.Username,
+                              "id": index,
+                              "QuestionId": question.id,
+                              "uid": Pool.User.uid
+                            };
+                            question.Answers!.add(mapAns);
+                            UProxy.Request(
+                                URequestType.PUT, IService.UPDATE_ANSWERS,
+                                data: mapAns);
+                          }
+                        });
+                      },
+                      child: Container(
+                          width: USize.Width * 0.8,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: USize.Width / 50,
+                            vertical: USize.Width / 100,
                           ),
-                        ),
-                        child: optionContainer(question, index)),
+                          decoration: BoxDecoration(
+                            color: userOption == index
+                                ? UColor.SecondColor
+                                : UColor.WhiteColor,
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                          ),
+                          child: optionContainer(question, index)),
+                    ),
                   );
                 },
               ),
@@ -1139,13 +1191,13 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             question.Options![index]["option"],
             color: UColor.PrimaryColor,
             fontSize: 15,
-            fontWeight: FontWeight.w500,
+            fontWeight: userOption == index ? FontWeight.w700 : FontWeight.w500,
           ),
           UText(
-            "(cabbar16)",
+            answers,
             color: UColor.PrimaryLightColor,
             fontSize: 13,
-            fontWeight: FontWeight.w400,
+            fontWeight: userOption == index ? FontWeight.w600 : FontWeight.w400,
           )
         ],
       );
@@ -1157,6 +1209,18 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     newQuestionController.text = "";
     newQuestionOptions = [];
     newQuestionTab = false;
+  }
+
+  bool onOptionChoose(int optionIndex) {
+    if (lastOptionQuestionIndex == questionIndex &&
+        DateTime.now().difference(lastOptionChooseDate).inMilliseconds < 2000) {
+      HelperMethods.SetSnackBar(context, "yarram sürekli şıklara basıp durma",
+          errorBar: true);
+      return false;
+    }
+    lastOptionQuestionIndex = questionIndex;
+    lastOptionChooseDate = DateTime.now();
+    return true;
   }
 }
 

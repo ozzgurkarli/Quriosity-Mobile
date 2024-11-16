@@ -7,11 +7,12 @@ class UButton extends StatefulWidget {
   Widget? child;
   Color? color;
 
-  UButton(
-      {super.key,
-      required this.onPressed,
-      required this.color,
-      required this.child,});
+  UButton({
+    super.key,
+    required this.onPressed,
+    required this.color,
+    required this.child
+  });
   @override
   State<UButton> createState() => _UButtonState();
 }
@@ -21,7 +22,7 @@ class _UButtonState extends State<UButton> {
 
   void onTapDown(TapDownDetails details) {
     setState(() {
-      scale =  0.9;
+      scale = 0.9;
     });
   }
 
@@ -53,7 +54,7 @@ class _UButtonState extends State<UButton> {
                 elevation: const WidgetStatePropertyAll(8),
                 shape: const WidgetStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)))),
-                    backgroundColor: WidgetStatePropertyAll(widget.color),
+                backgroundColor: WidgetStatePropertyAll(widget.color),
                 shadowColor: const WidgetStatePropertyAll(Colors.black)),
             child: widget.child),
       ),

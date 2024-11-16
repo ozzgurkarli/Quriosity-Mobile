@@ -11,6 +11,7 @@ class IService {
   static const String QUESTIONS = "questions";
   static const String SEND_MESSAGE = "sendMessage";
   static const String COMMUNITY_USERNAMES = "communityUsernames";
+  static const String UPDATE_ANSWERS = "updateAnswers";
   static const String NEW_QUESTION = "newQuestion";
   static const String INVITATION_CODE = "invitationCode";
   static const String USER_ACTIVITY = "userActivities";

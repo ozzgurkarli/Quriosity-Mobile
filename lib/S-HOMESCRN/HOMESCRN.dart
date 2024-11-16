@@ -3,6 +3,7 @@ import 'package:quriosity/S-CMNTYHME/CMNTYHME.dart';
 import 'package:quriosity/S-CRTJNACT/CRTJNACT.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
+import 'package:quriosity/components/UAnimatedWidget.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UIconButton.dart';
 import 'package:quriosity/components/UScaffold.dart';
@@ -53,12 +54,14 @@ class _HOMESCRNState extends State<HOMESCRN> {
             Stack(
               alignment: Alignment.center,
               children: [
-                UText(
-                  "QURIOSITY",
-                  fontSize: 45,
-                  googleFonts: true,
-                  fontWeight: FontWeight.w600,
-                  color: UColor.WhiteHeavyColor,
+                UAnimatedWidget(
+                  child: UText(
+                    "QURIOSITY",
+                    fontSize: 45,
+                    googleFonts: true,
+                    fontWeight: FontWeight.w600,
+                    color: UColor.WhiteHeavyColor,
+                  ),
                 ),
                 Align(
                     alignment: Alignment.centerRight,
@@ -105,7 +108,7 @@ class _HOMESCRNState extends State<HOMESCRN> {
             SizedBox(
               width: USize.Width * 0.8,
               child: UButton(
-                    color: UColor.SecondHeavyColor,
+                color: UColor.SecondHeavyColor,
                 onPressed: () async {
                   await Navigator.push(
                       context,
@@ -214,38 +217,42 @@ class _HOMESCRNState extends State<HOMESCRN> {
                                   "${Localizer.Get(Localizer.last_activity)}${HelperMethods.CalculateLastActivityTime(commList[index].LastActivity!)}${Localizer.Get(Localizer.ago)}",
                                   color: UColor.ThirdColor,
                                 ),
-                                trailing: commList[index].Streak! > 2 && DateTime.now()
-                                                              .difference(commList[
-                                                                      index]
-                                                                  .LastActivity!)
-                                                              .inHours <
-                                                          36
-                                    ? Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          UText(
-                                            commList[index].Streak!.toString(),
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black,
-                                          ),
-                                          Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 10),
-                                              child: HelperMethods.ShowAsset(
-                                                  DateTime.now()
-                                                              .difference(commList[
-                                                                      index]
-                                                                  .LastActivity!)
-                                                              .inHours >
-                                                          23
-                                                      ? UAsset.COLD_FIRE
-                                                      : UAsset.FIRE,
-                                                  height: USize.Height / 33,
-                                                  width: USize.Height / 50),
+                                trailing: commList[index].Streak! > 2 &&
+                                        DateTime.now()
+                                                .difference(commList[index]
+                                                    .LastActivity!)
+                                                .inHours <
+                                            36
+                                    ? UAnimatedWidget(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            UText(
+                                              commList[index]
+                                                  .Streak!
+                                                  .toString(),
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
                                             ),
-                                          )
-                                        ],
+                                            Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 10),
+                                                child: HelperMethods.ShowAsset(
+                                                    DateTime.now()
+                                                                .difference(commList[
+                                                                        index]
+                                                                    .LastActivity!)
+                                                                .inHours >
+                                                            23
+                                                        ? UAsset.COLD_FIRE
+                                                        : UAsset.FIRE,
+                                                    height: USize.Height / 33,
+                                                    width: USize.Height / 50),
+                                              ),
+                                            )
+                                          ],
+                                        ),
                                       )
                                     : Container(
                                         width: USize.Height / 77,

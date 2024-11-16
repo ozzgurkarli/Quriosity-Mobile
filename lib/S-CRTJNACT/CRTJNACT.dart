@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
+import 'package:quriosity/components/UAnimatedWidget.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UIconButton.dart';
 import 'package:quriosity/components/UScaffold.dart';
@@ -89,30 +90,34 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeCount: 3,
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
-                  child: UButton(
-                      color: UColor.SecondHeavyColor,
-                      onPressed: () async {
-                        shakeKeyJoin.currentState?.shake();
-                        if (invitationLinkController.text.length != 12) {
-                          HelperMethods.SetSnackBar(
-                              context,
-                              Localizer.Get(Localizer
-                                  .invitation_code_cannot_be_less_than_8_characters));
-                        }
-                        try {
-                          await UProxy.Request(
-                              URequestType.GET, IService.JOIN_COMMUNITY,
-                              param:
-                                  "${invitationLinkController.text}/${Pool.User.uid}");
-                          Navigator.pop(context);
-                        } catch (e) {
-                          HelperMethods.ApiException(context, e);
-                        }
-                      },
-                      child: UText(
-                        Localizer.Get(Localizer.join),
-                        fontWeight: FontWeight.w500,
-                      ))),
+                  child: UAnimatedWidget(
+                    child: UButton(
+                        color: UColor.SecondHeavyColor,
+                        onPressed: () async {
+                          shakeKeyJoin.currentState?.shake();
+                          if (invitationLinkController.text.length != 12) {
+                            HelperMethods.SetSnackBar(
+                                context,
+                                errorBar: true,
+                                Localizer.Get(Localizer
+                                    .invitation_code_cannot_be_less_than_12_characters));
+                            return;
+                          }
+                          try {
+                            await UProxy.Request(
+                                URequestType.GET, IService.JOIN_COMMUNITY,
+                                param:
+                                    "${invitationLinkController.text}/${Pool.User.uid}");
+                            Navigator.pop(context);
+                          } catch (e) {
+                            HelperMethods.ApiException(context, e);
+                          }
+                        },
+                        child: UText(
+                          Localizer.Get(Localizer.join),
+                          fontWeight: FontWeight.w500,
+                        )),
+                  )),
               onChanged: (p0) {
                 String filteredValue = p0.replaceAll(RegExp(r'[^A-Z0-9]'), '');
 
@@ -165,40 +170,43 @@ class _CRTJNACTState extends State<CRTJNACT> {
                   shakeCount: 3,
                   shakeOffset: 5,
                   shakeDuration: const Duration(milliseconds: 500),
-                  child: UButton(
-                      color: UColor.SecondHeavyColor,
-                      onPressed: () async {
-                        if (communityNameController.text.length < 4) {
-                          shakeKeyCreate.currentState?.shake();
-                          HelperMethods.SetSnackBar(
-                              context,
-                              Localizer.Get(Localizer
-                                  .community_name_cannot_be_less_than_4_characters),
-                              errorBar: true);
-                          return;
-                        }
-                        HelperMethods.SetLoadingScreen(context);
-                        DTOCommunity dtoCommunity = DTOCommunity(
-                            CommunityName: communityNameController.text.trim(),
-                            Participants: [
-                              {'uid': Pool.User.uid, 'flag': 0}
-                            ]);
-                        try {
-                          await UProxy.Request(
-                              URequestType.POST, IService.CREATE_COMMUNITY,
-                              data: dtoCommunity.toJson());
-                          HelperMethods.SetSnackBar(context,
-                              Localizer.Get(Localizer.community_created));
-                          int count = 0;
-                          Navigator.of(context).popUntil((_) => count++ >= 2);
-                        } catch (e) {
-                          HelperMethods.ApiException(context, e);
-                        }
-                      },
-                      child: UText(
-                        Localizer.Get(Localizer.create),
-                        fontWeight: FontWeight.w500,
-                      ))),
+                  child: UAnimatedWidget(
+                    child: UButton(
+                        color: UColor.SecondHeavyColor,
+                        onPressed: () async {
+                          if (communityNameController.text.length < 4) {
+                            shakeKeyCreate.currentState?.shake();
+                            HelperMethods.SetSnackBar(
+                                context,
+                                Localizer.Get(Localizer
+                                    .community_name_cannot_be_less_than_4_characters),
+                                errorBar: true);
+                            return;
+                          }
+                          HelperMethods.SetLoadingScreen(context);
+                          DTOCommunity dtoCommunity = DTOCommunity(
+                              CommunityName:
+                                  communityNameController.text.trim(),
+                              Participants: [
+                                {'uid': Pool.User.uid, 'flag': 0}
+                              ]);
+                          try {
+                            await UProxy.Request(
+                                URequestType.POST, IService.CREATE_COMMUNITY,
+                                data: dtoCommunity.toJson());
+                            HelperMethods.SetSnackBar(context,
+                                Localizer.Get(Localizer.community_created));
+                            int count = 0;
+                            Navigator.of(context).popUntil((_) => count++ >= 2);
+                          } catch (e) {
+                            HelperMethods.ApiException(context, e);
+                          }
+                        },
+                        child: UText(
+                          Localizer.Get(Localizer.create),
+                          fontWeight: FontWeight.w500,
+                        )),
+                  )),
               onChanged: (p0) {
                 String filteredValue =
                     p0.replaceAll(RegExp(r'[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]'), '');
