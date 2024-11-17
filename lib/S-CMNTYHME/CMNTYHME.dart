@@ -106,7 +106,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenActiveUsers();
         return a;
       });
-      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
+      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId)
+          .then((date) {
         var data = UProxy.Request(
           URequestType.GET,
           IService.QUESTIONS,
@@ -116,13 +117,33 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
               .then((t) {
             setState(() {
-
               for (var i = 0; i < t.length; i++) {
-                Map<String, dynamic> jsonQst = t[i].map((key, value) => MapEntry(key.toString(), value));
+                Map<String, dynamic> jsonQst =
+                    t[i].map((key, value) => MapEntry(key.toString(), value));
                 List opts = [];
-                for (var item in (jsonQst["Options"] as String).split("''%%/()/")) {
-                  opts.add({"option": item.split("**//--**^^")[0], "id": item.split("**//--**^^")[1]});
+                List anss = [];
+                for (var item
+                    in (jsonQst["Options"] as String).split("''%%/()/")) {
+                  opts.add({
+                    "option": item.split("**//--**^^")[0],
+                    "id": item.split("**//--**^^")[1]
+                  });
                 }
+                jsonQst["Options"] = opts;
+                if (jsonQst["Answers"] != null) {
+                  for (var item
+                      in (jsonQst["Answers"] as String).split("''%%/()/")) {
+                    anss.add({
+                      "uid": item.split("**//--**^^")[0],
+                      "id": item.split("**//--**^^")[1],
+                      "Username": (_users as List)
+                          .where((x) => x["uid"] == item.split("**//--**^^")[0])
+                          .first["id"]
+                    });
+                  }
+                  jsonQst["Answers"] = anss;
+                }
+                jsonQst["Options"] = opts;
                 DTOQuestion qst2 = DTOQuestion.fromJson(jsonQst);
                 qst2.Options = opts;
                 qst2.SenderUsername = (_users as List)
@@ -139,7 +160,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 Map<String, dynamic> jsonQst = qst.toJson();
                 jsonQst["Localuid"] = Pool.User.uid;
                 HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
-                questions.insert(0, qst);
+                questions.insert(i, qst);
               }
             });
             listenQuestions();
@@ -150,23 +171,6 @@ class _CMNTYHMEState extends State<CMNTYHME> {
 
         return data;
       });
-      // futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
-      //         param: widget.communityId)
-      //     .then((q) {
-      //   for (var i = 0; i < q.length; i++) {
-      //     DTOQuestion qst = DTOQuestion.fromJson(q[i]);
-      //     qst.Options = [];
-      //     for (var doc in q[i]["Options"]) {
-      //       qst.Options!.add(doc);
-      //     }
-      //     qst.SenderUsername = (_users as List)
-      //         .where((x) => x["uid"] == qst.senderuid)
-      //         .first["id"];
-      //     questions.add(qst);
-      //   }
-      //   listenQuestions();
-      //   return q;
-      // });
       futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId)
           .then((date) {
         var data = UProxy.Request(
@@ -268,6 +272,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         int tmpIndx = questions.indexWhere((x) => x.id == qst.id);
         if (tmpIndx != -1) {
           questions[tmpIndx] = qst;
+          HelperMethods.UpdateLocalDB("QUESTIONS", jsonQst);
         } else {
           HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
           HelperMethods.SetSnackBar(
@@ -391,11 +396,11 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           controller: questionIndexController,
                           itemBuilder: (context, index) {
                             if (!newQuestionTab) {
-                              if(qstIndexHolder>=0){
-                              questionIndex = index;
+                              if (qstIndexHolder >= 0) {
+                                questionIndex = index;
                               }
                               qstIndexHolder += 1;
-                            }else{
+                            } else {
                               qstIndexHolder = -2;
                             }
                             List x = [];
@@ -407,7 +412,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       x["Username"] == Pool.User.Username)
                                   .toList();
                             }
-                            userOption = x.isEmpty ? -1 : x.first["id"];
+                            userOption = x.isEmpty
+                                ? -1
+                                : int.parse(x.first["id"].toString());
                             return questionContainer(
                                 question: newQuestionTab
                                     ? DTOQuestion()
@@ -418,86 +425,92 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 ),
                 SizedBox(
                   width: USize.Width * 0.8,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: Column(
                     children: [
-                      UButton(
-                        color: UColor.WhiteHeavyColor,
-                        onPressed: () {
-                          if (!newQuestionTab) {
-                            setState(() {
-                              newQuestionTab = true;
-                              chatExpanded = true;
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          UButton(
+                            color: UColor.WhiteHeavyColor,
+                            onPressed: () {
+                              if (!newQuestionTab) {
+                                setState(() {
+                                  newQuestionTab = true;
+                                  chatExpanded = true;
 
-                              setChatSize();
-                            });
-                          } else if (newQuestionController.text.isEmpty) {
-                            HelperMethods.SetSnackBar(context,
-                                "Yok artık! Soruyu sormayı mı unuttun, yoksa ben mi yanlış anladım?",
-                                errorBar: true);
-                          } else if (newQuestionOptions.length < 2) {
-                            HelperMethods.SetSnackBar(context,
-                                "Bir soruda en az iki seçenek olmalı! Yoksa sorunuz öyle bir yalnızlığa mahkum olur ki, yalnızca karanlık düşüncelerle baş başa kalır!",
-                                errorBar: true);
-                          } else {
-                            setState(() {
-                              DTOQuestion question = DTOQuestion(
-                                  Question: newQuestionController.text,
-                                  senderuid: Pool.User.uid,
-                                  Options: newQuestionOptions.reversed.toList(),
-                                  CommunityId: widget.communityId,
-                                  InactiveUsers: users
-                                      .where((x) => !x["active"])
-                                      .toList());
-                              UProxy.Request(
-                                  URequestType.POST, IService.NEW_QUESTION,
-                                  data: question.toJson());
-                              clearNewQuestionInfos();
-                              setChatSize();
-                            });
-                          }
-                        },
-                        child: UText(
-                          newQuestionTab ? "Soruyu Tamamla" : "Soru Ekle",
-                          color: UColor.PrimaryColor,
-                        ),
+                                  setChatSize();
+                                });
+                              } else if (newQuestionController.text.isEmpty) {
+                                HelperMethods.SetSnackBar(context,
+                                    "Yok artık! Soruyu sormayı mı unuttun, yoksa ben mi yanlış anladım?",
+                                    errorBar: true);
+                              } else if (newQuestionOptions.length < 2) {
+                                HelperMethods.SetSnackBar(context,
+                                    "Bir soruda en az iki seçenek olmalı! Yoksa sorunuz öyle bir yalnızlığa mahkum olur ki, yalnızca karanlık düşüncelerle baş başa kalır!",
+                                    errorBar: true);
+                              } else {
+                                setState(() {
+                                  DTOQuestion question = DTOQuestion(
+                                      Question: newQuestionController.text,
+                                      senderuid: Pool.User.uid,
+                                      Options:
+                                          newQuestionOptions.reversed.toList(),
+                                      CommunityId: widget.communityId,
+                                      InactiveUsers: users
+                                          .where((x) => !x["active"])
+                                          .toList());
+                                  UProxy.Request(
+                                      URequestType.POST, IService.NEW_QUESTION,
+                                      data: question.toJson());
+                                  clearNewQuestionInfos();
+                                  setChatSize();
+                                });
+                              }
+                            },
+                            child: UText(
+                              newQuestionTab ? "Soruyu Tamamla" : "Soru Ekle",
+                              color: UColor.PrimaryColor,
+                            ),
+                          ),
+                          UIconButton(
+                            icon: const Icon(
+                              Icons.share,
+                              color: UColor.WhiteColor,
+                            ),
+                            onPressed: () async {
+                              if (invitationCode == null) {
+                                HelperMethods.SetLoadingScreen(context);
+                                invitationCode = DTOInvitationCode.fromJson(
+                                    await UProxy.Request(URequestType.GET,
+                                        IService.INVITATION_CODE,
+                                        param: widget.communityId));
+                                Navigator.pop(context);
+                              }
+                              HelperMethods.SetSnackBar(context,
+                                  "Topluluk Davet Kodu: ${invitationCode!.InvitationCode!}");
+                            },
+                          ),
+                          UButton(
+                            onPressed: () {
+                              if (newQuestionTab) {
+                                clearNewQuestionInfos();
+                              }
+                              setState(() {
+                                setChatSize();
+                              });
+                            },
+                            color: newQuestionTab
+                                ? UColor.RedHeavyColor
+                                : UColor.SecondHeavyColor,
+                            child: UText(newQuestionTab
+                                ? "Vazgeç"
+                                : chatExpanded
+                                    ? "Sohbeti Küçült"
+                                    : "Sohbeti Büyült"),
+                          ),
+                        ],
                       ),
-                      UIconButton(
-                        icon: const Icon(
-                          Icons.share,
-                          color: UColor.WhiteColor,
-                        ),
-                        onPressed: () async {
-                          if (invitationCode == null) {
-                            HelperMethods.SetLoadingScreen(context);
-                            invitationCode = DTOInvitationCode.fromJson(
-                                await UProxy.Request(
-                                    URequestType.GET, IService.INVITATION_CODE,
-                                    param: widget.communityId));
-                            Navigator.pop(context);
-                          }
-                          HelperMethods.SetSnackBar(context,
-                              "Topluluk Davet Kodu: ${invitationCode!.InvitationCode!}");
-                        },
-                      ),
-                      UButton(
-                        onPressed: () {
-                          if (newQuestionTab) {
-                            clearNewQuestionInfos();
-                          }
-                          setState(() {
-                            setChatSize();
-                          });
-                        },
-                        color: newQuestionTab
-                            ? UColor.RedHeavyColor
-                            : UColor.SecondHeavyColor,
-                        child: UText(newQuestionTab
-                            ? "Vazgeç"
-                            : chatExpanded
-                                ? "Sohbeti Küçült"
-                                : "Sohbeti Büyült"),
-                      ),
+                      Gap(newQuestionTab ? 60 : 0)
                     ],
                   ),
                 ),
@@ -723,7 +736,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       Message: messageController.text,
                                       CommunityId: widget.communityId,
                                       senderuid: Pool.User.uid,
-                                      QuestionId: questions.isNotEmpty ? questions[questionIndex].id : "");
+                                      QuestionId: questions.isNotEmpty
+                                          ? questions[questionIndex].id
+                                          : "");
                                   messageController.text = "";
                                   msg.SenderUsername = Pool.User.Username;
                                   msg.MessageDate = DateTime.now();
@@ -982,6 +997,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   },
                 ),
               ),
+              const Gap(50),
               UTextField(
                 width: USize.Width * 0.8,
                 controller: newOptionController,
@@ -1030,7 +1046,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                         ))),
                 fillColor: UColor.WhiteHeavyColor,
               ),
-              Gap(USize.Height * 0.05)
+              Gap(USize.Height * 0.01)
             ],
           )
         ],
@@ -1144,6 +1160,17 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                   (x) => x["Username"] == Pool.User.Username);
                               if (userOption == index) {
                                 userOption = -1;
+                                question.Answers ??= [];
+                                Map<String, dynamic> mapAns = {
+                                  "Username": Pool.User.Username,
+                                  "id": index,
+                                  "QuestionId": question.id,
+                                  "uid": Pool.User.uid
+                                };
+                                question.Answers!.add(mapAns);
+                                UProxy.Request(
+                                    URequestType.PUT, IService.UPDATE_ANSWERS,
+                                    data: mapAns);
                                 return;
                               }
                             }
@@ -1199,7 +1226,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             answers = "(${item["Username"]})";
           } else {
             answers =
-                "${answers.substring(0, answers.length - 1)}, ${item["Username"]}])";
+                "${answers.substring(0, answers.length - 1)}, ${item["Username"]})";
           }
         }
       }
