@@ -50,6 +50,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   List<DTOQuestion> questions = [];
   List<DTOUser> activeUsers = [];
   int userOption = -1;
+  int qstIndexHolder = 0;
   List users = [];
   DTOInvitationCode? invitationCode;
   double chatHeight = USize.Height * 0.23;
@@ -105,57 +106,67 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenActiveUsers();
         return a;
       });
-      // futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
-      //   var data = UProxy.Request(
-      //     URequestType.GET,
-      //     IService.QUESTIONS,
-      //     param: "${widget.communityId}/$date",
-      //   ).then((v) {
-      //     var d2 = HelperMethods.SelectFromLocalDB(
-      //             "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
-      //         .then((t) {
-      //       setState(() {
+      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
+        var data = UProxy.Request(
+          URequestType.GET,
+          IService.QUESTIONS,
+          param: "${widget.communityId}/$date",
+        ).then((v) {
+          var d2 = HelperMethods.SelectFromLocalDB(
+                  "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
+              .then((t) {
+            setState(() {
 
-      //         for (var i = 0; i < t.length; i++) {
-      //           questions.add(DTOQuestion.fromJson(t[i]));
-      //         }
+              for (var i = 0; i < t.length; i++) {
+                Map<String, dynamic> jsonQst = t[i].map((key, value) => MapEntry(key.toString(), value));
+                List opts = [];
+                for (var item in (jsonQst["Options"] as String).split("''%%/()/")) {
+                  opts.add({"option": item.split("**//--**^^")[0], "id": item.split("**//--**^^")[1]});
+                }
+                DTOQuestion qst2 = DTOQuestion.fromJson(jsonQst);
+                qst2.Options = opts;
+                qst2.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == qst2.senderuid)
+                    .first["id"];
+                questions.add(qst2);
+              }
 
-      //         for (var i = 0; i < v.length; i++) {
-      //           DTOQuestion qst = DTOQuestion.fromJson(v[i]);
-      //           qst.SenderUsername = (_users as List)
-      //               .where((x) => x["uid"] == qst.senderuid)
-      //               .first["id"];
-      //           Map<String, dynamic> jsonQst = qst.toJson();
-      //           jsonQst["Localuid"] = Pool.User.uid;
-      //           HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
-      //           questions.insert(0, qst);
-      //         }
-      //       });
-      //       listenChat();
-      //       return t;
-      //     });
-      //     return d2;
-      //   });
+              for (var i = 0; i < v.length; i++) {
+                DTOQuestion qst = DTOQuestion.fromJson(v[i]);
+                qst.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == qst.senderuid)
+                    .first["id"];
+                Map<String, dynamic> jsonQst = qst.toJson();
+                jsonQst["Localuid"] = Pool.User.uid;
+                HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
+                questions.insert(0, qst);
+              }
+            });
+            listenQuestions();
+            return t;
+          });
+          return d2;
+        });
 
-      //   return data;
-      // });
-      futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
-              param: widget.communityId)
-          .then((q) {
-        for (var i = 0; i < q.length; i++) {
-          DTOQuestion qst = DTOQuestion.fromJson(q[i]);
-          qst.Options = [];
-          for (var doc in q[i]["Options"]) {
-            qst.Options!.add(doc);
-          }
-          qst.SenderUsername = (_users as List)
-              .where((x) => x["uid"] == qst.senderuid)
-              .first["id"];
-          questions.add(qst);
-        }
-        listenQuestions();
-        return q;
+        return data;
       });
+      // futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
+      //         param: widget.communityId)
+      //     .then((q) {
+      //   for (var i = 0; i < q.length; i++) {
+      //     DTOQuestion qst = DTOQuestion.fromJson(q[i]);
+      //     qst.Options = [];
+      //     for (var doc in q[i]["Options"]) {
+      //       qst.Options!.add(doc);
+      //     }
+      //     qst.SenderUsername = (_users as List)
+      //         .where((x) => x["uid"] == qst.senderuid)
+      //         .first["id"];
+      //     questions.add(qst);
+      //   }
+      //   listenQuestions();
+      //   return q;
+      // });
       futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId)
           .then((date) {
         var data = UProxy.Request(
@@ -238,6 +249,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     bool firstRun = true;
     channelQuestions.stream.listen((question) {
       setState(() {
+        var mapQst = jsonDecode(question);
+        HelperMethods.SetLastOpenedDate("QST", widget.communityId,
+            DateTime.fromMillisecondsSinceEpoch(mapQst["LastOpenedDate"]));
         if (firstRun) {
           firstRun = false;
           return;
@@ -249,7 +263,17 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         }
         qst.SenderUsername =
             (users).where((x) => x["uid"] == qst.senderuid).first["id"];
-        questions.insert(0, qst);
+        Map<String, dynamic> jsonQst = qst.toJson();
+        jsonQst["Localuid"] = Pool.User.uid;
+        int tmpIndx = questions.indexWhere((x) => x.id == qst.id);
+        if (tmpIndx != -1) {
+          questions[tmpIndx] = qst;
+        } else {
+          HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
+          HelperMethods.SetSnackBar(
+              context, "Yeni sorular var, görmek için tıkla!");
+          questions.insert(0, qst);
+        }
         questionIndexController.jumpToPage(questionIndex);
       });
     });
@@ -292,8 +316,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   @override
   void dispose() {
     channelChat.sink.close();
-    channelQuestions.sink.close();
     channelActiveUsers.sink.close();
+    channelQuestions.sink.close();
     DTOUser dtoUser =
         DTOUser(CommunityId: widget.communityId, uid: Pool.User.uid, State: 0);
     UProxy.Request(URequestType.POST, IService.USER_ACTIVITY,
@@ -366,9 +390,17 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           itemCount: newQuestionTab ? 1 : questions.length,
                           controller: questionIndexController,
                           itemBuilder: (context, index) {
-                            questionIndex = index;
+                            if (!newQuestionTab) {
+                              if(qstIndexHolder>=0){
+                              questionIndex = index;
+                              }
+                              qstIndexHolder += 1;
+                            }else{
+                              qstIndexHolder = -2;
+                            }
                             List x = [];
-                            if (questions[index].Answers != null) {
+                            if (questions.isNotEmpty &&
+                                questions[index].Answers != null) {
                               x = questions[index]
                                   .Answers!
                                   .where((x) =>
@@ -691,7 +723,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       Message: messageController.text,
                                       CommunityId: widget.communityId,
                                       senderuid: Pool.User.uid,
-                                      QuestionId: questions[questionIndex].id);
+                                      QuestionId: questions.isNotEmpty ? questions[questionIndex].id : "");
                                   messageController.text = "";
                                   msg.SenderUsername = Pool.User.Username;
                                   msg.MessageDate = DateTime.now();
@@ -1010,7 +1042,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         mainAxisAlignment:
             chatExpanded ? MainAxisAlignment.start : MainAxisAlignment.start,
         children: [
-          showUsername(true, question!.SenderUsername!, true),
+          showUsername(true, question!.SenderUsername ?? "", true),
           Padding(
             padding: EdgeInsets.only(right: USize.Width * 0.05),
             child: CustomPaint(
@@ -1054,7 +1086,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
       children: [
         Column(
           children: [
-            showUsername(true, question!.SenderUsername!, true),
+            showUsername(true, question!.SenderUsername ?? "", true),
             Padding(
               padding: EdgeInsets.only(right: USize.Width * 0.05),
               child: CustomPaint(
@@ -1105,7 +1137,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          if (onOptionChoose(0)) {
+                          if (onOptionChoose()) {
                             if (userOption == index ||
                                 (userOption != -1 && userOption != index)) {
                               question.Answers!.removeWhere(
@@ -1211,7 +1243,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     newQuestionTab = false;
   }
 
-  bool onOptionChoose(int optionIndex) {
+  bool onOptionChoose() {
     if (lastOptionQuestionIndex == questionIndex &&
         DateTime.now().difference(lastOptionChooseDate).inMilliseconds < 2000) {
       HelperMethods.SetSnackBar(context, "yarram sürekli şıklara basıp durma",

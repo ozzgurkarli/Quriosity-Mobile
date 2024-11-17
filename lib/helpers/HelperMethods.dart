@@ -11,7 +11,6 @@ import 'package:path/path.dart';
 import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/components/UButton.dart';
 import 'package:quriosity/components/UText.dart';
-import 'package:quriosity/components/UTextButton.dart';
 import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UAsset.dart';
@@ -103,6 +102,7 @@ class HelperMethods {
   static Future<Database> DatabaseConnect() async {
     String dbPath = join(await getDatabasesPath(), ENV.DatabaseName);
 
+      print(dbPath);
     if (!(await databaseExists(dbPath))) {
       ByteData data = await rootBundle.load("lib/localdb/${ENV.DatabaseName}");
       List<int> bytes =
@@ -120,6 +120,17 @@ class HelperMethods {
       data["MessageDate"] =
           (data["MessageDate"] as DateTime).millisecondsSinceEpoch;
     }
+    else if (tableName == "QUESTIONS") {
+      data["QuestionDate"] =
+          (data["QuestionDate"] as DateTime).millisecondsSinceEpoch;
+          String options = "";
+          for (var item in data["Options"]) {
+            options += item["option"]+"**//--**^^"+item["id"].toString()+"''%%/()/";
+          }
+          data["Options"] = options.substring(0, options.length-8);
+          data.remove("InactiveUsers");
+          data.remove("SenderUsername");
+    }
     await db.insert(tableName, data);
   }
 
@@ -136,7 +147,7 @@ class HelperMethods {
       Duration duration = const Duration(seconds: 5)}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       margin: EdgeInsets.all(USize.Height / 20),
-      content: Align(alignment: Alignment.center, child: UTextButton(child: UText(text))),
+      content: Align(alignment: Alignment.center, child: UText(text)),
       duration: duration,
       backgroundColor: errorBar
           ? UColor.RedHeavyColor
