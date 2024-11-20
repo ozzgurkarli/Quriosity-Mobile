@@ -256,7 +256,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         var mapQst = jsonDecode(question);
         HelperMethods.SetLastOpenedDate("QST", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapQst["LastOpenedDate"]));
-        if (firstRun) {
+        if (firstRun && questions.length == 1) {
           firstRun = false;
           return;
         }
@@ -296,7 +296,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         var mapMsg = jsonDecode(message);
         HelperMethods.SetLastOpenedDate("MSG", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
-        if (firstRun) {
+        if (firstRun && messages.length == 1) {
           firstRun = false;
           return;
         }
@@ -361,7 +361,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               alignment: Alignment.bottomCenter,
               children: [
                 Container(
-                  width: USize.Width * 0.8,
+                  width: USize.Width,
                   height: USize.Height * 0.8 - chatHeight,
                   decoration: const BoxDecoration(color: UColor.PrimaryColor),
                 ),
@@ -415,10 +415,13 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                             userOption = x.isEmpty
                                 ? -1
                                 : int.parse(x.first["id"].toString());
-                            return questionContainer(
-                                question: newQuestionTab
-                                    ? DTOQuestion()
-                                    : questions[index]);
+                            return SizedBox(
+                              width: USize.Width * 0.8,
+                              child: questionContainer(
+                                  question: newQuestionTab
+                                      ? DTOQuestion()
+                                      : questions[index]),
+                            );
                           },
                         );
                       }),
@@ -968,7 +971,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   itemCount: newQuestionOptions.length,
                   itemBuilder: (context, index) {
                     return Padding(
-                      padding: EdgeInsets.all(USize.Height * 0.01),
+                      padding: EdgeInsets.symmetric(
+                          vertical: USize.Height * 0.01,
+                          horizontal: USize.Width * 0.11),
                       child: Container(
                         width: USize.Width * 0.8,
                         padding: EdgeInsets.symmetric(
@@ -1070,6 +1075,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             children: [
               Flexible(
                 child: Container(
+                  width: USize.Width * 0.8,
                   padding: EdgeInsets.symmetric(
                     horizontal: USize.Width / 50,
                     vertical: USize.Width / 67,
@@ -1114,6 +1120,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               children: [
                 Flexible(
                   child: Container(
+                    width: USize.Width * 0.8,
                     padding: EdgeInsets.symmetric(
                       horizontal: USize.Width / 50,
                       vertical: USize.Width / 67,
@@ -1149,7 +1156,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 itemCount: question.Options!.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: EdgeInsets.all(USize.Height * 0.01),
+                    padding: EdgeInsets.symmetric(
+                        vertical: USize.Height * 0.01,
+                        horizontal: USize.Width * 0.11),
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -1165,9 +1174,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                   "Username": Pool.User.Username,
                                   "id": index,
                                   "QuestionId": question.id,
-                                  "uid": Pool.User.uid
+                                  "uid": Pool.User.uid,
+                                  "remove": true
                                 };
-                                question.Answers!.add(mapAns);
                                 UProxy.Request(
                                     URequestType.PUT, IService.UPDATE_ANSWERS,
                                     data: mapAns);
