@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quriosity/S-CMNTYHME/CMNTYHME.dart';
 import 'package:quriosity/S-CRTJNACT/CRTJNACT.dart';
+import 'package:quriosity/S-MYPRFILE/MYPRFILE.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UAnimatedWidget.dart';
@@ -69,10 +70,19 @@ class _HOMESCRNState extends State<HOMESCRN> {
                       padding:
                           EdgeInsets.only(top: 5.0, right: USize.Width / 50),
                       child: UIconButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const MYPRFILE()));
+                            setState(() {
+                              newRequest();
+                            });
+                          },
                           icon: const Icon(
-                        Icons.person,
-                        color: UColor.WhiteHeavyColor,
-                      )),
+                            Icons.person,
+                            color: UColor.WhiteHeavyColor,
+                          )),
                     ))
               ],
             ),

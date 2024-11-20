@@ -139,6 +139,9 @@ class HelperMethods {
           data["Answers"] = answers.substring(0, answers.length - 8);
         }
       }
+      if(data["Answers"] is List){
+        data.remove("Answers");
+      }
       data["Options"] = options.substring(0, options.length - 8);
       data.remove("InactiveUsers");
       data.remove("SenderUsername");

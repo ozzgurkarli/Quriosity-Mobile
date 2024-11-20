@@ -867,7 +867,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     alignment: AlignmentDirectional.topCenter,
                     children: [
                       SizedBox(
-                          width: USize.Width * 0.2,
+                          width: USize.Height * 0.06,
                           height: USize.Height * 0.06,
                           child: CircleAvatar(
                             backgroundImage:
