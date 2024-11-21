@@ -164,12 +164,15 @@ class HelperMethods {
             item["option"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
       }
       data["Options"] = options.substring(0, options.length - 8);
-      if (data["Answers"] != null) {
+      if (data["Answers"] != null && data["Answers"].isNotEmpty) {
         for (var item in data["Answers"]) {
           answers +=
               item["uid"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
         }
         data["Answers"] = answers.substring(0, answers.length - 8);
+      }
+      else{
+        data.remove("Answers");
       }
       data.remove("InactiveUsers");
       data.remove("SenderUsername");

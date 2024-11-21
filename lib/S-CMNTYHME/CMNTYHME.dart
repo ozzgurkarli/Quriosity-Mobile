@@ -130,7 +130,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   });
                 }
                 jsonQst["Options"] = opts;
-                if (jsonQst["Answers"] != null) {
+                if (jsonQst["Answers"] != null && jsonQst["Answers"] is String) {
                   for (var item
                       in (jsonQst["Answers"] as String).split("''%%/()/")) {
                     anss.add({
@@ -142,6 +142,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     });
                   }
                   jsonQst["Answers"] = anss;
+                }
+                else if(jsonQst["Answers"] is! String){
+                  jsonQst["Answers"] = null;
                 }
                 jsonQst["Options"] = opts;
                 DTOQuestion qst2 = DTOQuestion.fromJson(jsonQst);
@@ -871,7 +874,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           height: USize.Height * 0.06,
                           child: CircleAvatar(
                             backgroundImage:
-                                AssetImage('lib/assets/pp_${index % 4}.png'),
+                                AssetImage('lib/assets/pp_${usersListed[index]["ProfileIcon"]}.png'),
                           )),
                       Container(
                         width: USize.Width * 0.2,

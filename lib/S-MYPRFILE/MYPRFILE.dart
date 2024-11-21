@@ -3,6 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
+import 'package:quriosity/components/UAnimatedWidget.dart';
 import 'package:quriosity/components/UIconButton.dart';
 import 'package:quriosity/components/UScaffold.dart';
 import 'package:quriosity/components/UText.dart';
@@ -33,13 +34,15 @@ class _MYPRFILEState extends State<MYPRFILE> {
             Stack(
               alignment: Alignment.center,
               children: [
-                SizedBox(
-                  child: UText(
-                    "QURIOSITY",
-                    fontSize: 45,
-                    googleFonts: true,
-                    fontWeight: FontWeight.w600,
-                    color: UColor.WhiteHeavyColor,
+                UAnimatedWidget(
+                  child: SizedBox(
+                    child: UText(
+                      "QURIOSITY",
+                      fontSize: 45,
+                      googleFonts: true,
+                      fontWeight: FontWeight.w600,
+                      color: UColor.WhiteHeavyColor,
+                    ),
                   ),
                 ),
                 Align(
@@ -59,12 +62,14 @@ class _MYPRFILEState extends State<MYPRFILE> {
               ],
             ),
             Gap(USize.Height * 0.08),
-            SizedBox(
-                width: USize.Height * 0.15,
-                height: USize.Height * 0.15,
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage('lib/assets/pp_1.png'),
-                )),
+            UAnimatedWidget(
+              child: SizedBox(
+                  width: USize.Height * 0.15,
+                  height: USize.Height * 0.15,
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('lib/assets/pp_${Pool.User.ProfileIcon}.png'),
+                  )),
+            ),
             UTextButton(
                 child: UText(
               "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",
