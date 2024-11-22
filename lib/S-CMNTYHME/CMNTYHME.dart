@@ -20,6 +20,7 @@ import 'package:quriosity/dto/DTOUser.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
+import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/URequestType.dart';
 import 'package:quriosity/helpers/USize.dart';
@@ -874,7 +875,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           height: USize.Height * 0.06,
                           child: CircleAvatar(
                             backgroundImage:
-                                AssetImage('lib/assets/pp_${usersListed[index]["ProfileIcon"]}.png'),
+                                AssetImage(UAsset.PROFILE_ICONS[usersListed[index]["ProfileIcon"]]),
                           )),
                       Container(
                         width: USize.Width * 0.2,

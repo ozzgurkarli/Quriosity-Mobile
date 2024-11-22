@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:quriosity/S-LOGINACC/LOGINACC.dart';
+import 'package:quriosity/S-STPRFICN/STPRFICN.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UAnimatedWidget.dart';
@@ -10,6 +11,7 @@ import 'package:quriosity/components/UText.dart';
 import 'package:quriosity/components/UTextButton.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Pool.dart';
+import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/URequestType.dart';
 import 'package:quriosity/helpers/USize.dart';
@@ -67,10 +69,13 @@ class _MYPRFILEState extends State<MYPRFILE> {
                   width: USize.Height * 0.15,
                   height: USize.Height * 0.15,
                   child: CircleAvatar(
-                    backgroundImage: AssetImage('lib/assets/pp_${Pool.User.ProfileIcon}.png'),
+                    backgroundImage: AssetImage(UAsset.PROFILE_ICONS[Pool.User.ProfileIcon!]),
                   )),
             ),
             UTextButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> const STPRFICN()));
+              },
                 child: UText(
               "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",
               fontSize: 13,
