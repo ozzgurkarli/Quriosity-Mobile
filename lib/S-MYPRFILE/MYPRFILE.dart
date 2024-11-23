@@ -73,8 +73,11 @@ class _MYPRFILEState extends State<MYPRFILE> {
                   )),
             ),
             UTextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> const STPRFICN()));
+              onPressed: ()async {
+                await Navigator.push(context, MaterialPageRoute(builder: (context)=> const STPRFICN()));
+                setState(() {
+                  
+                });
               },
                 child: UText(
               "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",

@@ -19,4 +19,7 @@ class UColor
   static const Color RedColor = Color(0xFFFE1D1D);
   static const Color RedHeavyColor = Color(0xFFB11B1B);
   static const Color Transparent = Color(0x55EFEFEF);
+
+
+  static const List<Color> ProfileIcons = [Color(0xFFABCC4E),Color(0xFFefa33f),Color(0xFF5cc3d1),Color(0xFFee8db5)];
 }
