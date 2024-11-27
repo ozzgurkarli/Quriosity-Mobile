@@ -20,6 +20,7 @@ import 'package:quriosity/dto/DTOUser.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
 import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
+import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/URequestType.dart';
 import 'package:quriosity/helpers/USize.dart';
@@ -41,12 +42,16 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   TextEditingController newOptionController = TextEditingController();
   PageController pageController = PageController();
   List<Map<String, dynamic>> newQuestionOptions = [];
+  DateTime lastOptionChooseDate = DateTime(1);
+  int lastOptionQuestionIndex = -1;
   late final WebSocketChannel channelChat;
   late final WebSocketChannel channelQuestions;
   late final WebSocketChannel channelActiveUsers;
   List<DTOMessage> messages = [];
   List<DTOQuestion> questions = [];
   List<DTOUser> activeUsers = [];
+  int userOption = -1;
+  int qstIndexHolder = 0;
   List users = [];
   DTOInvitationCode? invitationCode;
   double chatHeight = USize.Height * 0.23;
@@ -102,62 +107,83 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         listenActiveUsers();
         return a;
       });
-      // futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId).then((date) {
-      //   var data = UProxy.Request(
-      //     URequestType.GET,
-      //     IService.QUESTIONS,
-      //     param: "${widget.communityId}/$date",
-      //   ).then((v) {
-      //     var d2 = HelperMethods.SelectFromLocalDB(
-      //             "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' ORDER BY QUESTIONDATE DESC")
-      //         .then((t) {
-      //       setState(() {
-      //         for (var i = 0; i < t.length; i++) {
-      //           messages.add(DTOMessage.fromJson(t[i]));
-      //         }
+      futureQst = HelperMethods.GetLastOpenedDate("QST", widget.communityId)
+          .then((date) {
+        var data = UProxy.Request(
+          URequestType.GET,
+          IService.QUESTIONS,
+          param: "${widget.communityId}/$date",
+        ).then((v) {
+          var d2 = HelperMethods.SelectFromLocalDB(
+                  "SELECT * FROM QUESTIONS WHERE COMMUNITYID = '${widget.communityId}' AND LOCALUID = '${Pool.User.uid}' ORDER BY QUESTIONDATE DESC")
+              .then((t) {
+            setState(() {
+              for (var i = 0; i < t.length; i++) {
+                Map<String, dynamic> jsonQst =
+                    t[i].map((key, value) => MapEntry(key.toString(), value));
+                List opts = [];
+                List anss = [];
+                for (var item
+                    in (jsonQst["Options"] as String).split("''%%/()/")) {
+                  opts.add({
+                    "option": item.split("**//--**^^")[0],
+                    "id": item.split("**//--**^^")[1]
+                  });
+                }
+                jsonQst["Options"] = opts;
+                if (jsonQst["Answers"] != null && jsonQst["Answers"] is String) {
+                  for (var item
+                      in (jsonQst["Answers"] as String).split("''%%/()/")) {
+                    anss.add({
+                      "uid": item.split("**//--**^^")[0],
+                      "id": item.split("**//--**^^")[1],
+                      "Username": (_users as List)
+                          .where((x) => x["uid"] == item.split("**//--**^^")[0])
+                          .first["id"]
+                    });
+                  }
+                  jsonQst["Answers"] = anss;
+                }
+                else if(jsonQst["Answers"] is! String){
+                  jsonQst["Answers"] = null;
+                }
+                jsonQst["Options"] = opts;
+                DTOQuestion qst2 = DTOQuestion.fromJson(jsonQst);
+                qst2.Options = opts;
+                qst2.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == qst2.senderuid)
+                    .first["id"];
+                questions.add(qst2);
+              }
 
-      //         for (var i = 0; i < v.length; i++) {
-      //           DTOMessage msg = DTOMessage.fromJson(v[i]);
-      //           msg.SenderUsername = (_users as List)
-      //               .where((x) => x["uid"] == msg.senderuid)
-      //               .first["id"];
-      //           HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
-      //           messages.insert(0, msg);
-      //         }
-      //       });
-      //       listenChat();
-      //       return t;
-      //     });
-      //     return d2;
-      //   });
+              for (var i = 0; i < v.length; i++) {
+                DTOQuestion qst = DTOQuestion.fromJson(v[i]);
+                qst.SenderUsername = (_users as List)
+                    .where((x) => x["uid"] == qst.senderuid)
+                    .first["id"];
+                Map<String, dynamic> jsonQst = qst.toJson();
+                jsonQst["Localuid"] = Pool.User.uid;
+                HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
+                questions.insert(i, qst);
+              }
+            });
+            listenQuestions();
+            return t;
+          });
+          return d2;
+        });
 
-      //   return data;
-      // });
-      futureQst = UProxy.Request(URequestType.GET, IService.QUESTIONS,
-              param: widget.communityId)
-          .then((q) {
-        for (var i = 0; i < q.length; i++) {
-          DTOQuestion qst = DTOQuestion.fromJson(q[i]);
-          qst.Options = [];
-          for (var doc in q[i]["Options"]) {
-            qst.Options!.add(doc);
-          }
-          qst.SenderUsername = (_users as List)
-              .where((x) => x["uid"] == qst.senderuid)
-              .first["id"];
-          questions.add(qst);
-        }
-        listenQuestions();
-        return q;
+        return data;
       });
-      futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId).then((date) {
+      futureMsg = HelperMethods.GetLastOpenedDate("MSG", widget.communityId)
+          .then((date) {
         var data = UProxy.Request(
           URequestType.GET,
           IService.MESSAGES,
           param: "${widget.communityId}/$date",
         ).then((v) {
           var d2 = HelperMethods.SelectFromLocalDB(
-                  "SELECT * FROM MESSAGES WHERE COMMUNITYID = '${widget.communityId}' ORDER BY MESSAGEDATE DESC")
+                  "SELECT * FROM MESSAGES WHERE COMMUNITYID = '${widget.communityId}' AND LOCALUID = '${Pool.User.uid}' ORDER BY MESSAGEDATE DESC")
               .then((t) {
             setState(() {
               for (var i = 0; i < t.length; i++) {
@@ -169,7 +195,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 msg.SenderUsername = (_users as List)
                     .where((x) => x["uid"] == msg.senderuid)
                     .first["id"];
-                HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+                Map<String, dynamic> jsonMsg = msg.toJson();
+                jsonMsg["Localuid"] = Pool.User.uid;
+                HelperMethods.InsertLocalDB("MESSAGES", jsonMsg);
                 messages.insert(i, msg);
               }
             });
@@ -229,7 +257,10 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     bool firstRun = true;
     channelQuestions.stream.listen((question) {
       setState(() {
-        if (firstRun) {
+        var mapQst = jsonDecode(question);
+        HelperMethods.SetLastOpenedDate("QST", widget.communityId,
+            DateTime.fromMillisecondsSinceEpoch(mapQst["LastOpenedDate"]));
+        if (firstRun && questions.length == 1) {
           firstRun = false;
           return;
         }
@@ -240,7 +271,18 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         }
         qst.SenderUsername =
             (users).where((x) => x["uid"] == qst.senderuid).first["id"];
-        questions.insert(0, qst);
+        Map<String, dynamic> jsonQst = qst.toJson();
+        jsonQst["Localuid"] = Pool.User.uid;
+        int tmpIndx = questions.indexWhere((x) => x.id == qst.id);
+        if (tmpIndx != -1) {
+          questions[tmpIndx] = qst;
+          HelperMethods.UpdateLocalDB("QUESTIONS", jsonQst);
+        } else {
+          HelperMethods.InsertLocalDB("QUESTIONS", jsonQst);
+          HelperMethods.SetSnackBar(
+              context, "Yeni sorular var, görmek için tıkla!");
+          questions.insert(0, qst);
+        }
         questionIndexController.jumpToPage(questionIndex);
       });
     });
@@ -258,19 +300,24 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         var mapMsg = jsonDecode(message);
         HelperMethods.SetLastOpenedDate("MSG", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
-        if (firstRun) {
+        if (firstRun && messages.length == 1) {
           firstRun = false;
           return;
         }
         DTOMessage msg = DTOMessage.fromJson(mapMsg);
         msg.SenderUsername =
             (users).where((x) => x["uid"] == msg.senderuid).first["id"];
-        HelperMethods.InsertLocalDB("MESSAGES", msg.toJson());
+        Map<String, dynamic> jsonMsg = msg.toJson();
+        jsonMsg["Localuid"] = Pool.User.uid;
+        HelperMethods.InsertLocalDB("MESSAGES", jsonMsg);
         if (msg.MessageDate!.isAfter(
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]))) {
-          HelperMethods.SetLastOpenedDate("MSG", widget.communityId, msg.MessageDate!);
+          HelperMethods.SetLastOpenedDate(
+              "MSG", widget.communityId, msg.MessageDate!);
         }
-        messages.insert(0, msg);
+        if (msg.senderuid != Pool.User.uid) {
+          messages.insert(0, msg);
+        }
       });
     });
   }
@@ -278,8 +325,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   @override
   void dispose() {
     channelChat.sink.close();
-    channelQuestions.sink.close();
     channelActiveUsers.sink.close();
+    channelQuestions.sink.close();
     DTOUser dtoUser =
         DTOUser(CommunityId: widget.communityId, uid: Pool.User.uid, State: 0);
     UProxy.Request(URequestType.POST, IService.USER_ACTIVITY,
@@ -318,7 +365,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               alignment: Alignment.bottomCenter,
               children: [
                 Container(
-                  width: USize.Width * 0.8,
+                  width: USize.Width,
                   height: USize.Height * 0.8 - chatHeight,
                   decoration: const BoxDecoration(color: UColor.PrimaryColor),
                 ),
@@ -352,97 +399,125 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           itemCount: newQuestionTab ? 1 : questions.length,
                           controller: questionIndexController,
                           itemBuilder: (context, index) {
-                            questionIndex = index;
-                            return questionContainer(
-                                question: newQuestionTab
-                                    ? DTOQuestion()
-                                    : questions[index]);
+                            if (!newQuestionTab) {
+                              if (qstIndexHolder >= 0) {
+                                questionIndex = index;
+                              }
+                              qstIndexHolder += 1;
+                            } else {
+                              qstIndexHolder = -2;
+                            }
+                            List x = [];
+                            if (questions.isNotEmpty &&
+                                questions[index].Answers != null) {
+                              x = questions[index]
+                                  .Answers!
+                                  .where((x) =>
+                                      x["Username"] == Pool.User.Username)
+                                  .toList();
+                            }
+                            userOption = x.isEmpty
+                                ? -1
+                                : int.parse(x.first["id"].toString());
+                            return SizedBox(
+                              width: USize.Width * 0.8,
+                              child: questionContainer(
+                                  question: newQuestionTab
+                                      ? DTOQuestion()
+                                      : questions[index]),
+                            );
                           },
                         );
                       }),
                 ),
                 SizedBox(
                   width: USize.Width * 0.8,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: Column(
                     children: [
-                      UButton(
-                        color: UColor.WhiteHeavyColor,
-                        onPressed: () {
-                          if (!newQuestionTab) {
-                            setState(() {
-                              newQuestionTab = true;
-                              chatExpanded = true;
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          UButton(
+                            color: UColor.WhiteHeavyColor,
+                            onPressed: () {
+                              if (!newQuestionTab) {
+                                setState(() {
+                                  newQuestionTab = true;
+                                  chatExpanded = true;
 
-                              setChatSize();
-                            });
-                          } else if (newQuestionController.text.isEmpty) {
-                            HelperMethods.SetSnackBar(context,
-                                "Yok artık! Soruyu sormayı mı unuttun, yoksa ben mi yanlış anladım?",
-                                errorBar: true);
-                          } else if (newQuestionOptions.length < 2) {
-                            HelperMethods.SetSnackBar(context,
-                                "Bir soruda en az iki seçenek olmalı! Yoksa sorunuz öyle bir yalnızlığa mahkum olur ki, yalnızca karanlık düşüncelerle baş başa kalır!",
-                                errorBar: true);
-                          } else {
-                            setState(() {
-                              DTOQuestion question = DTOQuestion(
-                                  Question: newQuestionController.text,
-                                  senderuid: Pool.User.uid,
-                                  Options: newQuestionOptions.reversed.toList(),
-                                  CommunityId: widget.communityId,
-                                  InactiveUsers: users
-                                      .where((x) => !x["active"])
-                                      .toList());
-                              UProxy.Request(
-                                  URequestType.POST, IService.NEW_QUESTION,
-                                  data: question.toJson());
-                              clearNewQuestionInfos();
-                              setChatSize();
-                            });
-                          }
-                        },
-                        child: UText(
-                          newQuestionTab ? "Soruyu Tamamla" : "Soru Ekle",
-                          color: UColor.PrimaryColor,
-                        ),
+                                  setChatSize();
+                                });
+                              } else if (newQuestionController.text.isEmpty) {
+                                HelperMethods.SetSnackBar(context,
+                                    "Yok artık! Soruyu sormayı mı unuttun, yoksa ben mi yanlış anladım?",
+                                    errorBar: true);
+                              } else if (newQuestionOptions.length < 2) {
+                                HelperMethods.SetSnackBar(context,
+                                    "Bir soruda en az iki seçenek olmalı! Yoksa sorunuz öyle bir yalnızlığa mahkum olur ki, yalnızca karanlık düşüncelerle baş başa kalır!",
+                                    errorBar: true);
+                              } else {
+                                setState(() {
+                                  DTOQuestion question = DTOQuestion(
+                                      Question: newQuestionController.text,
+                                      senderuid: Pool.User.uid,
+                                      Options:
+                                          newQuestionOptions.reversed.toList(),
+                                      CommunityId: widget.communityId,
+                                      InactiveUsers: users
+                                          .where((x) => !x["active"])
+                                          .toList());
+                                  UProxy.Request(
+                                      URequestType.POST, IService.NEW_QUESTION,
+                                      data: question.toJson());
+                                  clearNewQuestionInfos();
+                                  setChatSize();
+                                });
+                              }
+                            },
+                            child: UText(
+                              newQuestionTab ? "Soruyu Tamamla" : "Soru Ekle",
+                              color: UColor.PrimaryColor,
+                            ),
+                          ),
+                          UIconButton(
+                            icon: const Icon(
+                              Icons.share,
+                              color: UColor.WhiteColor,
+                            ),
+                            onPressed: () async {
+                              if (invitationCode == null) {
+                                HelperMethods.SetLoadingScreen(context);
+                                invitationCode = DTOInvitationCode.fromJson(
+                                    await UProxy.Request(URequestType.GET,
+                                        IService.INVITATION_CODE,
+                                        param: widget.communityId));
+                                Navigator.pop(context);
+                              }
+                              HelperMethods.SetSnackBar(context,
+                                  "Topluluk Davet Kodu: ${invitationCode!.InvitationCode!}");
+                            },
+                          ),
+                          UButton(
+                            onPressed: () {
+                              if (newQuestionTab) {
+                                clearNewQuestionInfos();
+                              }
+                              setState(() {
+                                setChatSize();
+                              });
+                            },
+                            color: newQuestionTab
+                                ? UColor.RedHeavyColor
+                                : UColor.SecondHeavyColor,
+                            child: UText(newQuestionTab
+                                ? "Vazgeç"
+                                : chatExpanded
+                                    ? "Sohbeti Küçült"
+                                    : "Sohbeti Büyült"),
+                          ),
+                        ],
                       ),
-                      UIconButton(
-                        icon: const Icon(
-                          Icons.share,
-                          color: UColor.WhiteColor,
-                        ),
-                        onPressed: () async {
-                          if (invitationCode == null) {
-                            HelperMethods.SetLoadingScreen(context);
-                            invitationCode = DTOInvitationCode.fromJson(
-                                await UProxy.Request(
-                                    URequestType.GET, IService.INVITATION_CODE,
-                                    param: widget.communityId));
-                            Navigator.pop(context);
-                          }
-                          HelperMethods.SetSnackBar(context,
-                              "Topluluk Davet Kodu: ${invitationCode!.InvitationCode!}");
-                        },
-                      ),
-                      UButton(
-                        onPressed: () {
-                          if (newQuestionTab) {
-                            clearNewQuestionInfos();
-                          }
-                          setState(() {
-                            setChatSize();
-                          });
-                        },
-                        color: newQuestionTab
-                            ? UColor.RedHeavyColor
-                            : UColor.SecondHeavyColor,
-                        child: UText(newQuestionTab
-                            ? "Vazgeç"
-                            : chatExpanded
-                                ? "Sohbeti Küçült"
-                                : "Sohbeti Büyült"),
-                      ),
+                      Gap(newQuestionTab ? 60 : 0)
                     ],
                   ),
                 ),
@@ -668,11 +743,18 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                       Message: messageController.text,
                                       CommunityId: widget.communityId,
                                       senderuid: Pool.User.uid,
-                                      QuestionId: questions[questionIndex].id);
+                                      QuestionId: questions.isNotEmpty
+                                          ? questions[questionIndex].id
+                                          : "");
                                   messageController.text = "";
+                                  msg.SenderUsername = Pool.User.Username;
+                                  msg.MessageDate = DateTime.now();
+                                  messages.insert(0, msg);
+                                  Map<String, dynamic> mapMsg = msg.toJson();
+                                  mapMsg["MessageDate"] = null;
                                   UProxy.Request(
                                       URequestType.POST, IService.SEND_MESSAGE,
-                                      data: msg.toJson());
+                                      data: mapMsg);
                                 },
                                 child: const Icon(
                                   Icons.arrow_forward,
@@ -789,11 +871,11 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     alignment: AlignmentDirectional.topCenter,
                     children: [
                       SizedBox(
-                          width: USize.Width * 0.2,
+                          width: USize.Height * 0.06,
                           height: USize.Height * 0.06,
                           child: CircleAvatar(
                             backgroundImage:
-                                AssetImage('lib/assets/pp_${index % 4}.png'),
+                                AssetImage(UAsset.PROFILE_ICONS[usersListed[index]["ProfileIcon"]]),
                           )),
                       Container(
                         width: USize.Width * 0.2,
@@ -893,7 +975,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   itemCount: newQuestionOptions.length,
                   itemBuilder: (context, index) {
                     return Padding(
-                      padding: EdgeInsets.all(USize.Height * 0.01),
+                      padding: EdgeInsets.symmetric(
+                          vertical: USize.Height * 0.01,
+                          horizontal: USize.Width * 0.11),
                       child: Container(
                         width: USize.Width * 0.8,
                         padding: EdgeInsets.symmetric(
@@ -922,11 +1006,13 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   },
                 ),
               ),
+              const Gap(50),
               UTextField(
                 width: USize.Width * 0.8,
                 controller: newOptionController,
                 hintText: "Seçenek ekle...",
-                scrollPadding: EdgeInsets.fromLTRB(20, 20, 20, USize.Height*0.065),
+                scrollPadding:
+                    EdgeInsets.fromLTRB(20, 20, 20, USize.Height * 0.065),
                 readOnly: newQuestionOptions.length > 3,
                 constraints: BoxConstraints(maxHeight: USize.Height / 22),
                 suffixIcon: ShakeMe(
@@ -969,7 +1055,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                         ))),
                 fillColor: UColor.WhiteHeavyColor,
               ),
-              Gap(USize.Height * 0.05)
+              Gap(USize.Height * 0.01)
             ],
           )
         ],
@@ -981,7 +1067,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         mainAxisAlignment:
             chatExpanded ? MainAxisAlignment.start : MainAxisAlignment.start,
         children: [
-          showUsername(true, question!.SenderUsername!, true),
+          showUsername(true, question!.SenderUsername ?? "", true),
           Padding(
             padding: EdgeInsets.only(right: USize.Width * 0.05),
             child: CustomPaint(
@@ -993,6 +1079,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             children: [
               Flexible(
                 child: Container(
+                  width: USize.Width * 0.8,
                   padding: EdgeInsets.symmetric(
                     horizontal: USize.Width / 50,
                     vertical: USize.Width / 67,
@@ -1025,7 +1112,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
       children: [
         Column(
           children: [
-            showUsername(true, question!.SenderUsername!, true),
+            showUsername(true, question!.SenderUsername ?? "", true),
             Padding(
               padding: EdgeInsets.only(right: USize.Width * 0.05),
               child: CustomPaint(
@@ -1037,6 +1124,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               children: [
                 Flexible(
                   child: Container(
+                    width: USize.Width * 0.8,
                     padding: EdgeInsets.symmetric(
                       horizontal: USize.Width / 50,
                       vertical: USize.Width / 67,
@@ -1072,21 +1160,65 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                 itemCount: question.Options!.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: EdgeInsets.all(USize.Height * 0.01),
-                    child: Container(
-                        width: USize.Width * 0.8,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: USize.Width / 50,
-                          vertical: USize.Width / 100,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: UColor.WhiteColor,
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(12),
-                            bottomLeft: Radius.circular(12),
+                    padding: EdgeInsets.symmetric(
+                        vertical: USize.Height * 0.01,
+                        horizontal: USize.Width * 0.11),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (onOptionChoose()) {
+                            if (userOption == index ||
+                                (userOption != -1 && userOption != index)) {
+                              question.Answers!.removeWhere(
+                                  (x) => x["Username"] == Pool.User.Username);
+                              if (userOption == index) {
+                                userOption = -1;
+                                question.Answers ??= [];
+                                Map<String, dynamic> mapAns = {
+                                  "Username": Pool.User.Username,
+                                  "id": index,
+                                  "QuestionId": question.id,
+                                  "uid": Pool.User.uid,
+                                  "remove": true
+                                };
+                                UProxy.Request(
+                                    URequestType.PUT, IService.UPDATE_ANSWERS,
+                                    data: mapAns);
+                                return;
+                              }
+                            }
+                            userOption = index;
+                            question.Answers ??= [];
+                            Map<String, dynamic> mapAns = {
+                              "Username": Pool.User.Username,
+                              "id": index,
+                              "QuestionId": question.id,
+                              "uid": Pool.User.uid
+                            };
+                            question.Answers!.add(mapAns);
+                            UProxy.Request(
+                                URequestType.PUT, IService.UPDATE_ANSWERS,
+                                data: mapAns);
+                          }
+                        });
+                      },
+                      child: Container(
+                          width: USize.Width * 0.8,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: USize.Width / 50,
+                            vertical: USize.Width / 100,
                           ),
-                        ),
-                        child: optionContainer(question, index)),
+                          decoration: BoxDecoration(
+                            color: userOption == index
+                                ? UColor.SecondColor
+                                : UColor.WhiteColor,
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                          ),
+                          child: optionContainer(question, index)),
+                    ),
                   );
                 },
               ),
@@ -1107,7 +1239,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             answers = "(${item["Username"]})";
           } else {
             answers =
-                "${answers.substring(0, answers.length - 1)}, ${item["Username"]}])";
+                "${answers.substring(0, answers.length - 1)}, ${item["Username"]})";
           }
         }
       }
@@ -1131,13 +1263,13 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             question.Options![index]["option"],
             color: UColor.PrimaryColor,
             fontSize: 15,
-            fontWeight: FontWeight.w500,
+            fontWeight: userOption == index ? FontWeight.w700 : FontWeight.w500,
           ),
           UText(
-            "(cabbar16)",
+            answers,
             color: UColor.PrimaryLightColor,
             fontSize: 13,
-            fontWeight: FontWeight.w400,
+            fontWeight: userOption == index ? FontWeight.w600 : FontWeight.w400,
           )
         ],
       );
@@ -1149,6 +1281,18 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     newQuestionController.text = "";
     newQuestionOptions = [];
     newQuestionTab = false;
+  }
+
+  bool onOptionChoose() {
+    if (lastOptionQuestionIndex == questionIndex &&
+        DateTime.now().difference(lastOptionChooseDate).inMilliseconds < 2000) {
+      HelperMethods.SetSnackBar(context, "yarram sürekli şıklara basıp durma",
+          errorBar: true);
+      return false;
+    }
+    lastOptionQuestionIndex = questionIndex;
+    lastOptionChooseDate = DateTime.now();
+    return true;
   }
 }
 

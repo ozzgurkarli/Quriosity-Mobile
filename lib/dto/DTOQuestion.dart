@@ -21,7 +21,7 @@ class DTOQuestion{
       Question: json['Question'] as String?,
       SenderUsername: json['SenderUsername'] as String?,
       QuestionDate: DateTime.fromMillisecondsSinceEpoch(json['QuestionDate'] as int? ?? 1),
-      Options: json['Password'] as List?,
+      Options: json['Options'] as List?,
       Answers: json['Answers'] as List?,
       InactiveUsers: json['InactiveUsers'] as List?,
     );

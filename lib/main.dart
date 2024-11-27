@@ -55,6 +55,10 @@ void main() async {
     });
   }
 
+  if(ENV.NotificationToken != null){
+    Pool.User.NotificationToken = ENV.NotificationToken;
+  }
+
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {});
 
   _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {

@@ -20,7 +20,7 @@ class Localizer
   static const List<String> your_questions_your_community = ["Senin Soruların,\nSenin Topluluğun.", "Your Questions,\nYour Community."];
   static const List<String> username_cannot_be_less_than_4_characters = ["Kullanıcı adı 4 karakterden az olamaz.", "The username cannot be less than 4 characters."];
   static const List<String> password_cannot_be_less_than_8_characters = ["Parola 8 karakterden az olamaz.", "The password cannot be less than 8 characters."];
-  static const List<String> invitation_code_cannot_be_less_than_8_characters = ["Davet kodu 8 karakterden az olamaz.", "The invitation code cannot be less than 12 characters."];
+  static const List<String> invitation_code_cannot_be_less_than_12_characters = ["Davet kodu 12 karakterden az olamaz.", "The invitation code cannot be less than 12 characters."];
   static const List<String> community_name_cannot_be_less_than_4_characters = ["Topluluk adı 4 karakterden az olamaz.", "The community name cannot be less than 4 characters."];
   static const List<String> message_cannot_be_empty = ["Mesaj boş olamaz.", "The message cannot be empty."];
   static const List<String> option_cannot_be_empty = ["Seçenek boş olamaz.", "The option cannot be empty."];

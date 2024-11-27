@@ -87,21 +87,23 @@ class HelperMethods {
     return sp.getString("Username") ?? "";
   }
 
-  static SetLastOpenedDate(String Type, String CommunityId, DateTime time) async {
+  static SetLastOpenedDate(
+      String Type, String CommunityId, DateTime time) async {
     var sp = await SharedPreferences.getInstance();
-    sp.setInt(Type+CommunityId, time.millisecondsSinceEpoch);
+    sp.setInt(Type + CommunityId, time.millisecondsSinceEpoch);
     return;
   }
 
   static Future<int> GetLastOpenedDate(String Type, String CommunityId) async {
     var sp = await SharedPreferences.getInstance();
 
-    return sp.getInt(Type+CommunityId) ?? 0;
+    return sp.getInt(Type + CommunityId) ?? 0;
   }
 
   static Future<Database> DatabaseConnect() async {
     String dbPath = join(await getDatabasesPath(), ENV.DatabaseName);
 
+    print(dbPath);
     if (!(await databaseExists(dbPath))) {
       ByteData data = await rootBundle.load("lib/localdb/${ENV.DatabaseName}");
       List<int> bytes =
@@ -113,11 +115,67 @@ class HelperMethods {
     return openDatabase(dbPath);
   }
 
+  static UpdateLocalDB(String tableName, Map<String, dynamic> data) async {
+    Database db = await HelperMethods.DatabaseConnect();
+    if (tableName == "MESSAGES") {
+      data["MessageDate"] =
+          (data["MessageDate"] as DateTime).millisecondsSinceEpoch;
+    } else if (tableName == "QUESTIONS") {
+      data["QuestionDate"] =
+          (data["QuestionDate"] as DateTime).millisecondsSinceEpoch;
+      String options = "";
+      String answers = "";
+      for (var item in data["Options"]) {
+        options +=
+            item["option"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
+      }
+      data["Options"] = options.substring(0, options.length - 8);
+      if (data["Answers"] != null) {
+        for (var item in data["Answers"]) {
+          answers +=
+              item["uid"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
+        }
+        if (answers.isNotEmpty) {
+          data["Answers"] = answers.substring(0, answers.length - 8);
+        }
+      }
+      if(data["Answers"] is List){
+        data.remove("Answers");
+      }
+      data["Options"] = options.substring(0, options.length - 8);
+      data.remove("InactiveUsers");
+      data.remove("SenderUsername");
+    }
+    await db.update(tableName, data, where: "id = ?", whereArgs: [data["id"]]);
+  }
+
   static InsertLocalDB(String tableName, Map<String, dynamic> data) async {
     Database db = await HelperMethods.DatabaseConnect();
     if (tableName == "MESSAGES") {
       data["MessageDate"] =
           (data["MessageDate"] as DateTime).millisecondsSinceEpoch;
+    } else if (tableName == "QUESTIONS") {
+      data["QuestionDate"] =
+          (data["QuestionDate"] as DateTime).millisecondsSinceEpoch;
+      String options = "";
+      String answers = "";
+      for (var item in data["Options"]) {
+        options +=
+            item["option"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
+      }
+      data["Options"] = options.substring(0, options.length - 8);
+      if (data["Answers"] != null && data["Answers"].isNotEmpty) {
+        for (var item in data["Answers"]) {
+          answers +=
+              item["uid"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
+        }
+        data["Answers"] = answers.substring(0, answers.length - 8);
+      }
+      else{
+        data.remove("Answers");
+      }
+      data.remove("InactiveUsers");
+      data.remove("SenderUsername");
     }
     await db.insert(tableName, data);
   }
