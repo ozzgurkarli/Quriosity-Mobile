@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_shakemywidget/flutter_shakemywidget.dart';
+import 'package:quriosity/S-MYPRFILE/MYPRFILE.dart';
 import 'package:quriosity/api/IService.dart';
 import 'package:quriosity/api/UProxy.dart';
 import 'package:quriosity/components/UAnimatedWidget.dart';
@@ -69,6 +70,9 @@ class _CRTJNACTState extends State<CRTJNACT> {
                       padding: EdgeInsets.only(
                           top: USize.Width / 50, right: USize.Width / 50),
                       child: UIconButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=> const MYPRFILE()));
+                        },
                           icon: const Icon(
                         Icons.person,
                         color: UColor.WhiteHeavyColor,
@@ -110,7 +114,7 @@ class _CRTJNACTState extends State<CRTJNACT> {
                                     "${invitationLinkController.text}/${Pool.User.uid}");
                             Navigator.pop(context);
                           } catch (e) {
-                            HelperMethods.ApiException(context, e);
+                            HelperMethods.ApiException(context, e, popUntil: 0);
                           }
                         },
                         child: UText(
