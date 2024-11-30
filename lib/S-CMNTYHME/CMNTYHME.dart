@@ -300,7 +300,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         var mapMsg = jsonDecode(message);
         HelperMethods.SetLastOpenedDate("MSG", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
-        if (firstRun && messages.length == 1) {
+        if (firstRun && (messages.length == 1 || messages.first.id == mapMsg["id"])) {
           firstRun = false;
           return;
         }
@@ -1067,7 +1067,16 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         mainAxisAlignment:
             chatExpanded ? MainAxisAlignment.start : MainAxisAlignment.start,
         children: [
-          showUsername(true, question!.SenderUsername ?? "", true),
+          SizedBox(
+            width: USize.Width*0.8,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                showUsername(true, question!.SenderUsername ?? "", true),
+                Align(alignment: Alignment.centerRight, child: UText(HelperMethods.CalculateLastActivityTime(question.QuestionDate!), color: UColor.WhiteHeavyColor))
+              ],
+            ),
+          ),
           Padding(
             padding: EdgeInsets.only(right: USize.Width * 0.05),
             child: CustomPaint(
@@ -1112,7 +1121,16 @@ class _CMNTYHMEState extends State<CMNTYHME> {
       children: [
         Column(
           children: [
-            showUsername(true, question!.SenderUsername ?? "", true),
+          SizedBox(
+            width: USize.Width*0.8,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                showUsername(true, question!.SenderUsername ?? "", true),
+                Align(alignment: Alignment.centerRight, child: UText(HelperMethods.CalculateLastActivityTime(question.QuestionDate!), color: UColor.WhiteHeavyColor))
+              ],
+            ),
+          ),
             Padding(
               padding: EdgeInsets.only(right: USize.Width * 0.05),
               child: CustomPaint(
