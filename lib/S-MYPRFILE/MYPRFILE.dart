@@ -10,6 +10,7 @@ import 'package:quriosity/components/UScaffold.dart';
 import 'package:quriosity/components/UText.dart';
 import 'package:quriosity/components/UTextButton.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
+import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UAsset.dart';
 import 'package:quriosity/helpers/UColor.dart';
@@ -69,21 +70,44 @@ class _MYPRFILEState extends State<MYPRFILE> {
                   width: USize.Height * 0.15,
                   height: USize.Height * 0.15,
                   child: CircleAvatar(
-                    backgroundImage: AssetImage(UAsset.PROFILE_ICONS[Pool.User.ProfileIcon!]),
+                    backgroundImage: AssetImage(
+                        UAsset.PROFILE_ICONS[Pool.User.ProfileIcon!]),
                   )),
             ),
             UTextButton(
-              onPressed: ()async {
-                await Navigator.push(context, MaterialPageRoute(builder: (context)=> const STPRFICN()));
-                setState(() {
-                  
-                });
-              },
+                onPressed: () async {
+                  await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const STPRFICN()));
+                  setState(() {});
+                },
                 child: UText(
-              "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",
-              fontSize: 13,
-            )),
-            Gap(USize.Height * 0.45),
+                  "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",
+                )),
+            Gap(USize.Height * 0.15),
+            SizedBox(
+              width: USize.Width * 0.8,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  UText("Dil Tercihi:"),
+                  UTextButton(
+                    onPressed: () {
+                      setState(() {
+                        Localizer.index = Localizer.index == 0 ? 1 : 0;
+                      });
+                    },
+                    child: UText(
+                      Localizer.index_text[(Localizer.index + 1)%2],
+                      color: UColor.WhiteColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Gap(USize.Height * 0.15),
             UTextButton(
                 onPressed: () {
                   Pool.User.NotificationToken = null;
@@ -98,7 +122,6 @@ class _MYPRFILEState extends State<MYPRFILE> {
                 child: UText(
                   "Çıkış yap",
                   color: UColor.RedColor,
-                  fontSize: 13,
                 )),
           ],
         ),
