@@ -1,5 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
+import 'dart:math';
+
 class Localizer
 {
   static int index = 0;
@@ -47,9 +49,33 @@ class Localizer
   static const List<String> invitation_code = ["Davet Kodu", "Invitation Code"];
   static const List<String> community_name = ["Topluluk Adı", "Community Name"];
   static const List<String> create_join_community = ["Topluluk Oluştur/Katıl", "Create/Join Community"];
-  static const List<String> community_created = ["Topluluk oluşturuldu! Hadi şimdi arkadaşlarını davet et, soru bombardımanı başlasın!", "Community created! Now invite your friends and let the question bombardment begin!"];
-  
+  static const List<String> language_preference = ["Dil Tercihi", "Language Preference"];
+  static const List<String> log_out = ["Çıkış yap", "Log out"];
+
+
+
+
+
+  static const List<List<String>> community_created = [
+    ["Topluluk oluşturuldu! Hadi şimdi arkadaşlarını davet et, soru bombardımanı başlasın!", "Community created! Now invite your friends and let the question bombardment begin!"],
+    ["Topluluk tamam! Şimdi biraz eğlenme zamanı... ama önce arkadaşlarını davet et.", "Community ready! Now it's time for some fun... but first, invite your friends."],
+    ["Yeni topluluk, yeni maceralar! Hadi, üyeleri topla ve şenlik başlasın.", "New community, new adventures! Gather the members and let the fun begin."],
+    ["Topluluk hazır! Şimdi biraz kaos yaratmak için arkadaşlarını çağır.", "Community is set! Now call your friends to stir up some chaos."],
+    ["Vay canına, bir topluluk kurdun! Artık geriye sadece bol bol soru sormak kaldı.", "Wow, you created a community! Now all that's left is asking tons of questions."]
+  ];
+  static const List<List<String>> change_icon = [
+    ["Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?", "No way, this icon can't be me. Is the mirror lying too?"],
+    ["Bu fotoğrafı ne ara seçtim? Hadi hemen düzeltelim!", "When did i pick this photo? Let's fix it right now!"],
+    ["Bu profil fotoğrafıyla ne mesaj vermeye çalışıyorum? Yenilemek şart oldu.", "What message am i trying to send with this photo? Time for a refresh."],
+    ["Bu ikonla kimseyi etkileyemem, hadi yenisini bulalım!", "I can't impress anyone with this icon, let's find a new one!"],
+    ["Profil fotoğrafı mı? Yoksa 'beni ciddiye almayın' ilanı mı? Hadi değiştir!", "Profile photo? Or a 'don’t take me seriously' ad? Change it now!"]
+  ];
   static String Get(List<String> list){
     return list[index];
+  }
+
+  static String GetRandom(List<List<String>> list){
+    Random rnd = Random();
+    return list[rnd.nextInt(list.length)][index];
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:quriosity/S-SPLSHSCR/SPLSHSCR.dart';
 import 'package:quriosity/api/ENV.dart';
 import 'package:quriosity/helpers/HelperMethods.dart';
+import 'package:quriosity/helpers/Localizer.dart';
 import 'package:quriosity/helpers/Pool.dart';
 import 'package:quriosity/helpers/UColor.dart';
 import 'package:quriosity/helpers/USize.dart';
@@ -17,6 +18,7 @@ void main() async {
   await Firebase.initializeApp();
 
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  Localizer.index = await HelperMethods.GetIndex();
 
   await _firebaseMessaging.requestPermission(
     alert: true,

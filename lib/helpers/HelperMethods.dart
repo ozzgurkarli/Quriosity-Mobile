@@ -68,6 +68,13 @@ class HelperMethods {
     sp.setString("Username", Pool.User.Username!);
   }
 
+  static InsertIndex() async {
+    Localizer.index = Localizer.index == 0 ? 1 : 0;
+    var sp = await SharedPreferences.getInstance();
+
+    sp.setInt("index", Localizer.index);
+  }
+
   static DeleteData() async {
     var sp = await SharedPreferences.getInstance();
 
@@ -85,6 +92,12 @@ class HelperMethods {
     var sp = await SharedPreferences.getInstance();
 
     return sp.getString("Username") ?? "";
+  }
+
+  static Future<int> GetIndex() async {
+    var sp = await SharedPreferences.getInstance();
+
+    return sp.getInt("index") ?? 0;
   }
 
   static SetLastOpenedDate(
@@ -139,7 +152,7 @@ class HelperMethods {
           data["Answers"] = answers.substring(0, answers.length - 8);
         }
       }
-      if(data["Answers"] is List){
+      if (data["Answers"] is List) {
         data.remove("Answers");
       }
       data["Options"] = options.substring(0, options.length - 8);
@@ -170,8 +183,7 @@ class HelperMethods {
               item["uid"] + "**//--**^^" + item["id"].toString() + "''%%/()/";
         }
         data["Answers"] = answers.substring(0, answers.length - 8);
-      }
-      else{
+      } else {
         data.remove("Answers");
       }
       data.remove("InactiveUsers");

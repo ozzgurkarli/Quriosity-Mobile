@@ -57,36 +57,36 @@ class _LOGINACCState extends State<LOGINACC> {
               SizedBox(
                 height: USize.Height / 13,
               ),
-              
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                UText(
-                  "QURIOSITY",
-                  fontSize: 45,
-                  googleFonts: true,
-                  fontWeight: FontWeight.w600,
-                  color: UColor.WhiteHeavyColor,
-                ),
-                Align(
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  UText(
+                    "QURIOSITY",
+                    fontSize: 45,
+                    googleFonts: true,
+                    fontWeight: FontWeight.w600,
+                    color: UColor.WhiteHeavyColor,
+                  ),
+                  Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
-                padding: EdgeInsets.only(left: USize.Width / 1.5),
-                child: UTextButton(
-                  onPressed: () {
-                    setState(() {
-                      Localizer.index = Localizer.index == 0 ? 1 : 0;
-                    });
-                  },
-                  child: UText(
-                    Localizer.Get(Localizer.index_text),
-                    color: UColor.WhiteColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),)
-              ],
-            ),
+                      padding: EdgeInsets.only(left: USize.Width / 1.5),
+                      child: UTextButton(
+                        onPressed: () {
+                          setState(() {
+                            HelperMethods.InsertIndex();
+                          });
+                        },
+                        child: UText(
+                          Localizer.Get(Localizer.index_text),
+                          color: UColor.WhiteColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
               SizedBox(
                 height: USize.Height / 4,
               ),
@@ -173,7 +173,7 @@ class _LOGINACCState extends State<LOGINACC> {
 
                       HelperMethods.SetLoadingScreen(context);
                       DTOUser dtoUser = DTOUser(
-                        NotificationToken: ENV.NotificationToken,
+                          NotificationToken: ENV.NotificationToken,
                           Username: usernameController.text,
                           Password: passwordController.text);
                       try {

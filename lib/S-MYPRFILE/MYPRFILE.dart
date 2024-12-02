@@ -83,7 +83,7 @@ class _MYPRFILEState extends State<MYPRFILE> {
                   setState(() {});
                 },
                 child: UText(
-                  "Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?",
+                  Localizer.GetRandom(Localizer.change_icon),
                 )),
             Gap(USize.Height * 0.15),
             SizedBox(
@@ -91,15 +91,16 @@ class _MYPRFILEState extends State<MYPRFILE> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  UText("Dil Tercihi:"),
+                  UText(
+                  "${Localizer.Get(Localizer.language_preference)}:"),
                   UTextButton(
                     onPressed: () {
                       setState(() {
-                        Localizer.index = Localizer.index == 0 ? 1 : 0;
+                        HelperMethods.InsertIndex();
                       });
                     },
                     child: UText(
-                      Localizer.index_text[(Localizer.index + 1)%2],
+                      Localizer.index_text[(Localizer.index + 1) % 2],
                       color: UColor.WhiteColor,
                       fontWeight: FontWeight.w800,
                     ),
@@ -120,7 +121,7 @@ class _MYPRFILEState extends State<MYPRFILE> {
                       (route) => false);
                 },
                 child: UText(
-                  "Çıkış yap",
+                  Localizer.Get(Localizer.log_out),
                   color: UColor.RedColor,
                 )),
           ],

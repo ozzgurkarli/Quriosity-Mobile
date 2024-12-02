@@ -199,7 +199,7 @@ class _CRTJNACTState extends State<CRTJNACT> {
                                 URequestType.POST, IService.CREATE_COMMUNITY,
                                 data: dtoCommunity.toJson());
                             HelperMethods.SetSnackBar(context,
-                                Localizer.Get(Localizer.community_created));
+                                Localizer.GetRandom(Localizer.community_created));
                             int count = 0;
                             Navigator.of(context).popUntil((_) => count++ >= 2);
                           } catch (e) {
