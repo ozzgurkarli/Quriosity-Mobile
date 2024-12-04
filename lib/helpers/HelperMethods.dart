@@ -116,7 +116,6 @@ class HelperMethods {
   static Future<Database> DatabaseConnect() async {
     String dbPath = join(await getDatabasesPath(), ENV.DatabaseName);
 
-    print(dbPath);
     if (!(await databaseExists(dbPath))) {
       ByteData data = await rootBundle.load("lib/localdb/${ENV.DatabaseName}");
       List<int> bytes =
@@ -202,10 +201,11 @@ class HelperMethods {
   static SetSnackBar(BuildContext context, String text,
       {bool errorBar = false,
       bool successBar = false,
-      Duration duration = const Duration(seconds: 5)}) {
+      Duration duration = const Duration(seconds: 5),
+      GestureTapCallback? onTap}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       margin: EdgeInsets.all(USize.Height / 20),
-      content: Align(alignment: Alignment.center, child: UText(text)),
+      content: GestureDetector(onTap: onTap, child: Align(alignment: Alignment.center, child: UText(text))),
       duration: duration,
       backgroundColor: errorBar
           ? UColor.RedHeavyColor

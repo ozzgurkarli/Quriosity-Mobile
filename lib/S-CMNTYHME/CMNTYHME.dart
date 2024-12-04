@@ -43,6 +43,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   PageController pageController = PageController();
   List<Map<String, dynamic>> newQuestionOptions = [];
   DateTime lastOptionChooseDate = DateTime(1);
+  DateTime optionWarningDate = DateTime(1);
   int lastOptionQuestionIndex = -1;
   late final WebSocketChannel channelChat;
   late final WebSocketChannel channelQuestions;
@@ -131,7 +132,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                   });
                 }
                 jsonQst["Options"] = opts;
-                if (jsonQst["Answers"] != null && jsonQst["Answers"] is String) {
+                if (jsonQst["Answers"] != null &&
+                    jsonQst["Answers"] is String) {
                   for (var item
                       in (jsonQst["Answers"] as String).split("''%%/()/")) {
                     anss.add({
@@ -143,8 +145,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                     });
                   }
                   jsonQst["Answers"] = anss;
-                }
-                else if(jsonQst["Answers"] is! String){
+                } else if (jsonQst["Answers"] is! String) {
                   jsonQst["Answers"] = null;
                 }
                 jsonQst["Options"] = opts;
@@ -300,7 +301,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
         var mapMsg = jsonDecode(message);
         HelperMethods.SetLastOpenedDate("MSG", widget.communityId,
             DateTime.fromMillisecondsSinceEpoch(mapMsg["LastOpenedDate"]));
-        if (firstRun && (messages.length == 1 || messages.first.id == mapMsg["id"])) {
+        if (firstRun &&
+            (messages.length == 1 || messages.first.id == mapMsg["id"])) {
           firstRun = false;
           return;
         }
@@ -493,8 +495,16 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                         param: widget.communityId));
                                 Navigator.pop(context);
                               }
-                              HelperMethods.SetSnackBar(context,
-                                  "Topluluk Davet Kodu: ${invitationCode!.InvitationCode!}");
+                              HelperMethods.SetSnackBar(
+                                context,
+                                "Topluluk Davet Kodu:\n${invitationCode!.InvitationCode!}\n(Panoya kopyalamak için tıkla)",
+                                onTap: () async {
+                                  await Clipboard.setData(ClipboardData(
+                                      text: invitationCode!.InvitationCode!));
+                                  HelperMethods.SetSnackBar(context,
+                                      "Topluluk davet kodu panoya kopyalandı.");
+                                },
+                              );
                             },
                           ),
                           UButton(
@@ -874,8 +884,8 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                           width: USize.Height * 0.06,
                           height: USize.Height * 0.06,
                           child: CircleAvatar(
-                            backgroundImage:
-                                AssetImage(UAsset.PROFILE_ICONS[usersListed[index]["ProfileIcon"]]),
+                            backgroundImage: AssetImage(UAsset.PROFILE_ICONS[
+                                usersListed[index]["ProfileIcon"]]),
                           )),
                       Container(
                         width: USize.Width * 0.2,
@@ -1068,12 +1078,17 @@ class _CMNTYHMEState extends State<CMNTYHME> {
             chatExpanded ? MainAxisAlignment.start : MainAxisAlignment.start,
         children: [
           SizedBox(
-            width: USize.Width*0.8,
+            width: USize.Width * 0.8,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 showUsername(true, question!.SenderUsername ?? "", true),
-                Align(alignment: Alignment.centerRight, child: UText(HelperMethods.CalculateLastActivityTime(question.QuestionDate!), color: UColor.WhiteHeavyColor))
+                Align(
+                    alignment: Alignment.centerRight,
+                    child: UText(
+                        HelperMethods.CalculateLastActivityTime(
+                            question.QuestionDate!),
+                        color: UColor.WhiteHeavyColor))
               ],
             ),
           ),
@@ -1121,16 +1136,21 @@ class _CMNTYHMEState extends State<CMNTYHME> {
       children: [
         Column(
           children: [
-          SizedBox(
-            width: USize.Width*0.8,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                showUsername(true, question!.SenderUsername ?? "", true),
-                Align(alignment: Alignment.centerRight, child: UText(HelperMethods.CalculateLastActivityTime(question.QuestionDate!), color: UColor.WhiteHeavyColor))
-              ],
+            SizedBox(
+              width: USize.Width * 0.8,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  showUsername(true, question!.SenderUsername ?? "", true),
+                  Align(
+                      alignment: Alignment.centerRight,
+                      child: UText(
+                          HelperMethods.CalculateLastActivityTime(
+                              question.QuestionDate!),
+                          color: UColor.WhiteHeavyColor))
+                ],
+              ),
             ),
-          ),
             Padding(
               padding: EdgeInsets.only(right: USize.Width * 0.05),
               child: CustomPaint(
@@ -1302,8 +1322,12 @@ class _CMNTYHMEState extends State<CMNTYHME> {
   }
 
   bool onOptionChoose() {
+    if (DateTime.now().difference(optionWarningDate).inMilliseconds < 4000) {
+      return false;
+    }
     if (lastOptionQuestionIndex == questionIndex &&
         DateTime.now().difference(lastOptionChooseDate).inMilliseconds < 2000) {
+      optionWarningDate = DateTime.now();
       HelperMethods.SetSnackBar(context, "yarram sürekli şıklara basıp durma",
           errorBar: true);
       return false;
