@@ -57,11 +57,11 @@ void main() async {
     });
   }
 
-  if(ENV.NotificationToken != null){
+  if (ENV.NotificationToken != null) {
     Pool.User.NotificationToken = ENV.NotificationToken;
   }
 
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {});
+  FirebaseMessaging.onMessageOpenedApp.listen(handleMessage);
 
   _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
     if (message != null) {}
@@ -87,6 +87,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     Pool.User.uid = uid;
     Pool.User.Username = Username;
   }
+}
+
+void handleMessage(RemoteMessage? message) {
+  if (message == null) {
+    return;
+  }
+
+  Pool.NotificationMessage = message;
 }
 
 class MyApp extends StatelessWidget {

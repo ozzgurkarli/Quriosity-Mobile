@@ -36,6 +36,19 @@ class _HOMESCRNState extends State<HOMESCRN> {
     super.initState();
     request = UProxy.Request(URequestType.GET, IService.COMMUNITIES,
         param: Pool.User.uid);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Pool.NotificationMessage != null) {
+        String screen = Pool.NotificationMessage!.data["screen"];
+        String id = Pool.NotificationMessage!.data["id"];
+        Pool.NotificationMessage = null;
+        if (screen == "CMNTYHME") {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CMNTYHME(communityId: id)));
+        }
+      }
+    });
   }
 
   void newRequest() {
