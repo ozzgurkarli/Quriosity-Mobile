@@ -36,6 +36,15 @@ class _HOMESCRNState extends State<HOMESCRN> {
     super.initState();
     request = UProxy.Request(URequestType.GET, IService.COMMUNITIES,
         param: Pool.User.uid);
+  }
+
+  void newRequest() {
+    request = UProxy.Request(URequestType.GET, IService.COMMUNITIES,
+        param: Pool.User.uid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Pool.NotificationMessage != null) {
         String screen = Pool.NotificationMessage!.data["screen"];
@@ -49,15 +58,6 @@ class _HOMESCRNState extends State<HOMESCRN> {
         }
       }
     });
-  }
-
-  void newRequest() {
-    request = UProxy.Request(URequestType.GET, IService.COMMUNITIES,
-        param: Pool.User.uid);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return UScaffold(
       body: Center(
         child: Column(
