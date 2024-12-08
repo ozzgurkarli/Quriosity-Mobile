@@ -68,7 +68,7 @@ class Localizer
     ["Bu fotoğrafı ne ara seçtim? Hadi hemen düzeltelim!", "When did i pick this photo? Let's fix it right now!"],
     ["Bu profil fotoğrafıyla ne mesaj vermeye çalışıyorum? Yenilemek şart oldu.", "What message am i trying to send with this photo? Time for a refresh."],
     ["Bu ikonla kimseyi etkileyemem, hadi yenisini bulalım!", "I can't impress anyone with this icon, let's find a new one!"],
-    ["Profil fotoğrafı mı? Yoksa 'beni ciddiye almayın' ilanı mı? Hadi değiştir!", "Profile photo? Or a 'don’t take me seriously' ad? Change it now!"]
+    ["Profil fotoğrafı mı yoksa 'beni ciddiye almayın' ilanı mı? Hadi değiştir!", "Profile photo or a 'don’t take me seriously' ad? Change it now!"]
   ];
   static String Get(List<String> list){
     return list[index];

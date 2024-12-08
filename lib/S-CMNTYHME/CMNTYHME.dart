@@ -502,7 +502,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
                                   await Clipboard.setData(ClipboardData(
                                       text: invitationCode!.InvitationCode!));
                                   HelperMethods.SetSnackBar(context,
-                                      "Topluluk davet kodu panoya kopyalandı.");
+                                      "Kod panoya kopyalandı.");
                                 },
                               );
                             },
