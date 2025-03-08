@@ -284,7 +284,9 @@ class _CMNTYHMEState extends State<CMNTYHME> {
               context, "Yeni sorular var, görmek için tıkla!");
           questions.insert(0, qst);
         }
-        questionIndexController.jumpToPage(questionIndex);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          questionIndexController.jumpToPage(questionIndex);
+        });
       });
     });
   }
