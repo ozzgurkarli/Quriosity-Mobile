@@ -1330,7 +1330,7 @@ class _CMNTYHMEState extends State<CMNTYHME> {
     if (lastOptionQuestionIndex == questionIndex &&
         DateTime.now().difference(lastOptionChooseDate).inMilliseconds < 2000) {
       optionWarningDate = DateTime.now();
-      HelperMethods.SetSnackBar(context, "yarram sürekli şıklara basıp durma",
+      HelperMethods.SetSnackBar(context, "sürekli şıklara basıp durma",
           errorBar: true);
       return false;
     }
