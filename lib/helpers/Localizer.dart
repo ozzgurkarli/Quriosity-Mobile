@@ -64,11 +64,7 @@ class Localizer
     ["Vay canına, bir topluluk kurdun! Artık geriye sadece bol bol soru sormak kaldı.", "Wow, you created a community! Now all that's left is asking tons of questions."]
   ];
   static const List<List<String>> change_icon = [
-    ["Yok artık, bu ikon ben olamam. Ayna da mı yalan söylüyor?", "No way, this icon can't be me. Is the mirror lying too?"],
-    ["Bu fotoğrafı ne ara seçtim? Hadi hemen düzeltelim!", "When did i pick this photo? Let's fix it right now!"],
-    ["Bu profil fotoğrafıyla ne mesaj vermeye çalışıyorum? Yenilemek şart oldu.", "What message am i trying to send with this photo? Time for a refresh."],
-    ["Bu ikonla kimseyi etkileyemem, hadi yenisini bulalım!", "I can't impress anyone with this icon, let's find a new one!"],
-    ["Profil fotoğrafı mı yoksa 'beni ciddiye almayın' ilanı mı? Hadi değiştir!", "Profile photo or a 'don’t take me seriously' ad? Change it now!"]
+    ["pp degis", "change pp"],
   ];
   static String Get(List<String> list){
     return list[index];
